@@ -1,0 +1,271 @@
+[
+  {
+    "offence": "Murder",
+    "mandatory_ingredients": [
+      "Intention to cause death OR knowledge that act will cause death",
+      "Act caused death of a person",
+      "No legal justification (self-defense, act of law)",
+      "Premeditation or planning"
+    ],
+    "failure_examples": [
+      "Death caused accidentally without intent",
+      "Death in lawful exercise of duty",
+      "Death caused by negligence alone (not intention)",
+      "Self-defense that goes beyond necessary force",
+      "Act of God or force majeure"
+    ]
+  },
+  {
+    "offence": "Rape",
+    "mandatory_ingredients": [
+      "Non-consensual sexual intercourse",
+      "Penetration (vaginal or oral)",
+      "Absence of consent from the victim",
+      "Knowledge that act is without consent OR reckless about consent"
+    ],
+    "failure_examples": [
+      "Consensual sexual activity",
+      "Sexual activity without penetration (outraging modesty)",
+      "Activity with person who has capacity to consent but refused",
+      "Activity with person above marriageable age without force"
+    ]
+  },
+  {
+    "offence": "Theft",
+    "mandatory_ingredients": [
+      "Intention to take property belonging to another",
+      "Dishonest intent",
+      "Moving or removing the property",
+      "Property not taken with owner's permission"
+    ],
+    "failure_examples": [
+      "Taking property with owner's permission",
+      "Taking one's own property",
+      "Finding lost property and keeping it (might be different offense)",
+      "Taking property believing one has legal right to it"
+    ]
+  },
+  {
+    "offence": "Robbery",
+    "mandatory_ingredients": [
+      "Taking property belonging to another",
+      "Using or threatening force/violence",
+      "Dishonest intent",
+      "Property taken against owner's will"
+    ],
+    "failure_examples": [
+      "Theft without violence or threat",
+      "Using force to recover one's own property",
+      "Consensual transfer of property",
+      "Taking property with owner's knowledge and consent"
+    ]
+  },
+  {
+    "offence": "Extortion",
+    "mandatory_ingredients": [
+      "Intentional putting in fear of injury",
+      "Inducing person to deliver property or sign",
+      "Without right/consent",
+      "Threat of death, injury, wrongful restraint, or defamation"
+    ],
+    "failure_examples": [
+      "Lawful demand for payment (e.g., legitimate debt)",
+      "Threat that is not to person but only to property",
+      "Inducement through persuasion without threat",
+      "Agreed transaction with known terms"
+    ]
+  },
+  {
+    "offence": "Hurt",
+    "mandatory_ingredients": [
+      "Intentional act causing bodily pain, disease or incapacity",
+      "Physical injury to another",
+      "Act was intentional or with knowledge of consequences"
+    ],
+    "failure_examples": [
+      "Accidental injury",
+      "Consensual physical contact (sports, games)",
+      "Medical treatment causing necessary pain",
+      "Self-defense that doesn't constitute hurt"
+    ]
+  },
+  {
+    "offence": "Grievous Hurt",
+    "mandatory_ingredients": [
+      "Eight or more specific types of injuries (fracture, loss of tooth, etc.)",
+      "Dangerous to life or health",
+      "Intentional act causing these injuries",
+      "Severity distinguishes it from simple hurt"
+    ],
+    "failure_examples": [
+      "Simple hurt (minor injuries)",
+      "Injuries caused accidentally",
+      "Medical treatment causing temporary incapacity",
+      "Minor bruises or marks"
+    ]
+  },
+  {
+    "offence": "Criminal Conspiracy",
+    "mandatory_ingredients": [
+      "Agreement between two or more persons",
+      "Agreement to do an illegal act or legal act by illegal means",
+      "Overt act in furtherance of conspiracy",
+      "Parties had common intention"
+    ],
+    "failure_examples": [
+      "Single person planning crime alone",
+      "Mere discussion without agreement",
+      "Agreement to do lawful act by lawful means",
+      "Agreement without any overt act in furtherance"
+    ]
+  },
+  {
+    "offence": "Cheating",
+    "mandatory_ingredients": [
+      "Fraudulent or dishonest deception",
+      "Inducing a person to deliver property or sign document",
+      "Knowing the deception will cause loss to the deceived person",
+      "Intent to defraud"
+    ],
+    "failure_examples": [
+      "Honest mistake or misrepresentation",
+      "Transaction where both parties know the terms",
+      "Puffery in advertising (accepted business practice)",
+      "Fraud without actual delivery of property"
+    ]
+  },
+  {
+    "offence": "Wrongful Restraint",
+    "mandatory_ingredients": [
+      "Intentional use of force to prevent a person from proceeding",
+      "Force applied knowing person has right to proceed",
+      "Without person's consent or legal authority"
+    ],
+    "failure_examples": [
+      "Consensual holding/detaining",
+      "Lawful restraint (police, court order)",
+      "Prevention based on person's agreement",
+      "Preventing specific action person has no right to do"
+    ]
+  },
+  {
+    "offence": "Wrongful Confinement",
+    "mandatory_ingredients": [
+      "Intentional restraint of person by force or threat",
+      "Knowing person has no legal authority to be confined",
+      "Knowledge that person has right to proceed",
+      "Confinement in place of custody"
+    ],
+    "failure_examples": [
+      "Consensual staying in place",
+      "Lawful arrest or detention",
+      "Voluntary isolation",
+      "Restraint with person's knowledge and agreement"
+    ]
+  },
+  {
+    "offence": "Kidnapping",
+    "mandatory_ingredients": [
+      "Conveyance of person beyond Indian territory (for ransom/forced labor)",
+      "OR taking/enticing person with intent to cause wrongful restraint",
+      "Against person's will or with consent obtained by fraud/threat",
+      "Intent to take beyond territory or to wrongfully restrain"
+    ],
+    "failure_examples": [
+      "Taking person with genuine consent",
+      "Wrongful restraint without intention to take beyond territory",
+      "Consensual travel with deception about destination",
+      "Parental custody of children through lawful means"
+    ]
+  },
+  {
+    "offence": "Criminal Intimidation",
+    "mandatory_ingredients": [
+      "Threat of injury to person or property",
+      "Intention to cause alarm/fear in another",
+      "Knowledge that threat will cause fear",
+      "Threat with intent to cause person to do/omit something"
+    ],
+    "failure_examples": [
+      "Lawful warning or admonition",
+      "Statement made in jest without intent to intimidate",
+      "Threat without intent to actually harm",
+      "General statement not directed at specific person"
+    ]
+  },
+  {
+    "offence": "Burglary",
+    "mandatory_ingredients": [
+      "Entering building or part of building as trespasser",
+      "With intent to commit theft or other felony inside",
+      "OR committing theft while in building as trespasser",
+      "Building includes occupied or unoccupied structures"
+    ],
+    "failure_examples": [
+      "Entering building with permission",
+      "Being in building but not committing theft/felony",
+      "Theft without entering building",
+      "Trespass without intent to commit theft"
+    ]
+  },
+  {
+    "offence": "Dacoity",
+    "mandatory_ingredients": [
+      "Five or more persons acting together",
+      "Common intention to commit robbery",
+      "Use of violence or threat of violence",
+      "Taking property belonging to another"
+    ],
+    "failure_examples": [
+      "Robbery by fewer than five persons",
+      "Theft by group of five without shared intention",
+      "Taking property without violence by group",
+      "Violence by group without intent to rob"
+    ]
+  },
+  {
+    "offence": "Criminal Breach of Trust",
+    "mandatory_ingredients": [
+      "Entrustment of property to defendant",
+      "Dishonest misappropriation or conversion",
+      "Breach of trust or duty",
+      "Intention to cause wrongful loss"
+    ],
+    "failure_examples": [
+      "Property not entrusted to defendant",
+      "Honest mistake in handling entrusted property",
+      "Using property as authorized",
+      "Unintentional loss of entrusted property"
+    ]
+  },
+  {
+    "offence": "Sexual Assault",
+    "mandatory_ingredients": [
+      "Non-consensual touching of intimate parts",
+      "OR forcing to touch intimate parts",
+      "Against person's will or without consent",
+      "Knowledge/recklessness about lack of consent"
+    ],
+    "failure_examples": [
+      "Consensual touching",
+      "Incidental contact without sexual intent",
+      "Medical examination with consent",
+      "Contact without awareness it is non-consensual"
+    ]
+  },
+  {
+    "offence": "Criminal Intimidation with Threat",
+    "mandatory_ingredients": [
+      "Threat of death, injury, restraint, or loss to person/family",
+      "Threat to property or reputation",
+      "Knowledge threat will cause alarm",
+      "With intent person shall do/omit something"
+    ],
+    "failure_examples": [
+      "Lawful threat (e.g., legal action for debt)",
+      "Statement made without intent to intimidate",
+      "Criticism or negative speech",
+      "Threat made in context of lawful exercise of right"
+    ]
+  }
+]

@@ -1,0 +1,50 @@
+{
+  "version": "1.0",
+  "generated": "2026-01-10T14:20:58.711255",
+  "embedding_policy": {
+    "model": "all-MiniLM-L6-v2",
+    "model_type": "sentence-transformers",
+    "embedding_dim": 384,
+    "description": "Legal-optimized embeddings; fallback to OpenAI if available"
+  },
+  "chunk_embedding_text_composition": [
+    "section_id",
+    "section_title",
+    "section_summary (2-3 lines)",
+    "offence_type",
+    "severity_hint"
+  ],
+  "vector_db": {
+    "type": "pinecone|milvus|weaviate|redis",
+    "recommendation": "Pinecone for managed serverless, Milvus for on-prem",
+    "namespace": "statutes_section2",
+    "metric": "cosine",
+    "index_name": "statute-embeddings"
+  },
+  "retrieval_params": {
+    "top_k": 8,
+    "distance_threshold": 0.78,
+    "reranker": {
+      "enabled": true,
+      "type": "cross-encoder",
+      "model": "cross-encoder/ms-marco-MiniLM-L-12-v2",
+      "top_k_before_rerank": 20,
+      "rerank_threshold": 0.5
+    }
+  },
+  "metadata_fields_to_replicate": [
+    "law",
+    "section_id",
+    "section_title",
+    "offence_type",
+    "severity_hint",
+    "mapped_sections",
+    "source_file",
+    "source_page"
+  ],
+  "deployment_instructions": {
+    "pinecone": "Use pinecone-client==3.0.0; initialize index with dimension=384, metric=cosine",
+    "milvus": "Use pymilvus==2.3.0; create collection with schema matching metadata fields",
+    "local_test": "Use faiss==1.7.4 for CPU-based testing without cloud"
+  }
+}

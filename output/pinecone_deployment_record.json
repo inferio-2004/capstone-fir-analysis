@@ -1,0 +1,13 @@
+{
+  "status": "success",
+  "timestamp": "2026-01-11T14:38:54.073480",
+  "index_name": "statute-embeddings",
+  "vectors_uploaded": 629,
+  "embedding_model": "all-MiniLM-L6-v2",
+  "embedding_dimension": 384,
+  "similarity_metric": "cosine",
+  "retrieval_config": {
+    "top_k": 8,
+    "similarity_threshold": 0.78
+  }
+}

@@ -1,0 +1,109 @@
+{
+  "status": "success",
+  "timestamp": "C:\\Users\\Aniruth\\Desktop\\capstone_project",
+  "chain_prompting_stages": 2,
+  "fir_summary": {
+    "complainant": "Sunita Verma",
+    "accused": [
+      "Unknown Suspect"
+    ],
+    "incident": "On 2025-06-20 at around 09:15 PM, the victim was assaulted near the market by an unknown person who snatched her handbag containing cash and documents"
+  },
+  "analysis": {
+    "intent_identification": {
+      "primary_intent": "Robbery",
+      "confidence": 0.95,
+      "secondary_intents": [
+        "Assault",
+        "Threat",
+        "Theft"
+      ]
+    },
+    "legal_reasoning": {
+      "applicable_statutes": [
+        {
+          "section": "IPC 356",
+          "law": "Assault or criminal force in attempt to commit theft of property carried by a person",
+          "reasoning": "The accused used criminal force (pushed the victim) while attempting to steal the victim's handbag, which satisfies the elements of assault in the course of an attempted theft of property carried by a person."
+        },
+        {
+          "section": "IPC 390",
+          "law": "Robbery",
+          "reasoning": "Robbery is defined as theft or extortion accompanied by force or threat of force. The suspect forcibly snatched the handbag, threatened the victim, and fled, meeting the statutory definition of robbery."
+        },
+        {
+          "section": "IPC 394",
+          "law": "Voluntarily causing hurt in committing robbery",
+          "reasoning": "The victim sustained injuries when the assailant pushed her. The hurt was caused voluntarily in the course of committing robbery, thereby invoking the aggravated provision of IPC 394."
+        }
+      ],
+      "legal_basis": "The facts demonstrate a combination of assault, theft, and bodily injury committed in a single continuous act, which aligns with the statutory elements of IPC 356 (assault in attempt to steal), IPC 390 (robbery), and IPC 394 (hurt caused during robbery). These provisions collectively address the unlawful taking of property by force and the resulting injury to the victim.",
+      "severity_assessment": "high",
+      "confidence": 0.93
+    }
+  },
+  "retrieved_data": {
+    "total_chunks_retrieved": 10,
+    "chunks_after_filtering": 10,
+    "top_chunks_used": [
+      {
+        "law": "IPC",
+        "section": "356",
+        "score": 0.4908,
+        "preview": "Assault or criminal force in attempt to commit theft of property carried by a person .\u2014\nWhoever assa"
+      },
+      {
+        "law": "IPC",
+        "section": "382",
+        "score": 0.48,
+        "preview": "Theft after preparation made for causing death, hurt or restraint in order to the \ncommitting of the"
+      },
+      {
+        "law": "IPC",
+        "section": "390",
+        "score": 0.4638,
+        "preview": "Robbery .\u2014In all robbery there is either theft or extortion."
+      }
+    ]
+  },
+  "applicable_statutes": [
+    {
+      "primary": {
+        "law": "IPC",
+        "section": "356",
+        "title": "Assault or criminal force in attempt to commit theft of property carried by a person",
+        "reasoning": "The accused used criminal force (pushed the victim) while attempting to steal the victim's handbag, which satisfies the elements of assault in the course of an attempted theft of property carried by a person.",
+        "extract": "Assault or criminal force in attempt to commit theft of property carried by a person .\u2014 Whoever assaults or uses criminal force to any person, in atte"
+      },
+      "corresponding_sections": [
+        {
+          "law": "BNS",
+          "section": "499",
+          "extract": "[BNS 499 not in extracted database - check official government source]"
+        }
+      ]
+    },
+    {
+      "primary": {
+        "law": "IPC",
+        "section": "390",
+        "title": "Robbery",
+        "reasoning": "Robbery is defined as theft or extortion accompanied by force or threat of force. The suspect forcibly snatched the handbag, threatened the victim, and fled, meeting the statutory definition of robbery.",
+        "extract": "Robbery .\u2014In all robbery there is either theft or extortion."
+      },
+      "corresponding_sections": []
+    },
+    {
+      "primary": {
+        "law": "IPC",
+        "section": "394",
+        "title": "Voluntarily causing hurt in committing robbery",
+        "reasoning": "The victim sustained injuries when the assailant pushed her. The hurt was caused voluntarily in the course of committing robbery, thereby invoking the aggravated provision of IPC 394.",
+        "extract": "Voluntarily causing hurt in committing robbery .\u2014If any person, in committing or in  attempting to commit robbery, voluntarily causes hurt, such perso"
+      },
+      "corresponding_sections": []
+    }
+  ],
+  "severity": "high",
+  "confidence": 0.93
+}

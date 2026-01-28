@@ -1,0 +1,141 @@
+{
+  "status": "success",
+  "timestamp": "C:\\Users\\Aniruth\\Desktop\\capstone_project",
+  "fir_summary": {
+    "complainant": "Rajesh Kumar",
+    "accused": [
+      "Amit Singh",
+      "Vikram Patel"
+    ],
+    "incident": "\n        On 2024-01-09 at approximately 11:30 PM, the victim was returning home from her office\n        when she was approached by two armed men. They"
+  },
+  "analysis": {
+    "intent_identification": {
+      "primary_intent": "Robbery",
+      "confidence": 0.95,
+      "secondary_intents": [
+        "Assault",
+        "Kidnapping"
+      ]
+    },
+    "legal_reasoning": {
+      "applicable_statutes": [
+        {
+          "section": "IPC 356",
+          "law": "Assault or criminal force in attempt to commit theft of property carried by a person",
+          "reasoning": "The accused used force and threatened the victim with a knife to seize her mobile phone and jewelry, constituting assault or criminal force in the course of attempting theft."
+        },
+        {
+          "section": "IPC 394",
+          "law": "Voluntarily causing hurt in committing robbery",
+          "reasoning": "The victim sustained cuts and bruises; the hurt was inflicted voluntarily by the accused while committing robbery."
+        },
+        {
+          "section": "IPC 398",
+          "law": "Attempt to commit robbery or dacoity when armed with deadly weapon",
+          "reasoning": "Both perpetrators were armed with a knife, a deadly weapon, at the time they attempted the robbery."
+        },
+        {
+          "section": "IPC 324",
+          "law": "Voluntarily causing hurt by dangerous weapons or means",
+          "reasoning": "The injuries were caused by a knife, which is a dangerous weapon, satisfying the elements of this section."
+        },
+        {
+          "section": "IPC 382",
+          "law": "Theft after preparation made for causing death, hurt or restraint in order to the committing of the theft",
+          "reasoning": "The accused prepared and employed the threat of hurt (knife) as a means to facilitate the theft, meeting the \u2018preparation for causing hurt\u2019 requirement."
+        }
+      ]
+    }
+  },
+  "retrieved_data": {
+    "total_chunks_retrieved": 10,
+    "chunks_after_filtering": 10,
+    "top_chunks_used": [
+      {
+        "law": "IPC",
+        "section": "382",
+        "score": 0.4024,
+        "preview": "Theft after preparation made for causing death, hurt or restraint in order to the \ncommitting of the"
+      },
+      {
+        "law": "IPC",
+        "section": "356",
+        "score": 0.3955,
+        "preview": "Assault or criminal force in attempt to commit theft of property carried by a person .\u2014\nWhoever assa"
+      },
+      {
+        "law": "IPC",
+        "section": "394",
+        "score": 0.3766,
+        "preview": "Voluntarily causing hurt in committing robbery .\u2014If any person, in committing or in \nattempting to c"
+      }
+    ]
+  },
+  "applicable_statutes": [
+    {
+      "primary": {
+        "law": "IPC",
+        "section": "356",
+        "title": "Assault or criminal force in attempt to commit theft of property carried by a person",
+        "reasoning": "The accused used force and threatened the victim with a knife to seize her mobile phone and jewelry, constituting assault or criminal force in the course of attempting theft.",
+        "extract": "Assault or criminal force in attempt to commit theft of property carried by a person .\u2014 Whoever assaults or uses criminal force to any person, in atte"
+      },
+      "corresponding_sections": [
+        {
+          "law": "BNS",
+          "section": "499",
+          "extract": "[BNS 499 not in extracted database - check official government source]"
+        }
+      ]
+    },
+    {
+      "primary": {
+        "law": "IPC",
+        "section": "394",
+        "title": "Voluntarily causing hurt in committing robbery",
+        "reasoning": "The victim sustained cuts and bruises; the hurt was inflicted voluntarily by the accused while committing robbery.",
+        "extract": "Voluntarily causing hurt in committing robbery .\u2014If any person, in committing or in  attempting to commit robbery, voluntarily causes hurt, such perso"
+      },
+      "corresponding_sections": []
+    },
+    {
+      "primary": {
+        "law": "IPC",
+        "section": "398",
+        "title": "Attempt to commit robbery or dacoity when armed with deadly weapon",
+        "reasoning": "Both perpetrators were armed with a knife, a deadly weapon, at the time they attempted the robbery.",
+        "extract": "Attempt to commit robbery or dacoity when armed with deadly weapon .\u2014If, at the time of  attempting to commit robbery or dacoity, the offender is arme"
+      },
+      "corresponding_sections": []
+    },
+    {
+      "primary": {
+        "law": "IPC",
+        "section": "324",
+        "title": "Voluntarily causing hurt by dangerous weapons or means",
+        "reasoning": "The injuries were caused by a knife, which is a dangerous weapon, satisfying the elements of this section.",
+        "extract": "Voluntarily causing hurt by dangerous weapons or means .\u2014Whoever, except in the case  provided for by section 334, voluntarily causes hurt by means of"
+      },
+      "corresponding_sections": [
+        {
+          "law": "BNS",
+          "section": "426",
+          "extract": "[BNS 426 not in extracted database - check official government source]"
+        }
+      ]
+    },
+    {
+      "primary": {
+        "law": "IPC",
+        "section": "382",
+        "title": "Theft after preparation made for causing death, hurt or restraint in order to the committing of the theft",
+        "reasoning": "The accused prepared and employed the threat of hurt (knife) as a means to facilitate the theft, meeting the \u2018preparation for causing hurt\u2019 requirement.",
+        "extract": "Theft after preparation made for causing death, hurt or restraint in order to the  committing of the theft .\u2014Whoever commits theft, having made prepar"
+      },
+      "corresponding_sections": []
+    }
+  ],
+  "severity": "unknown",
+  "confidence": 0
+}

@@ -1,0 +1,249 @@
+SYSTEM PROPOSAL – SECTION 2 (Instructional: Prepare Statute RAG)
+Statute-Aware RAG for Identifying Applicable IPC & BNS Sections
+(Instructions written as directives for an AI agent / pipeline to prepare the RAG)
+**note: all the files (pdf and json) are present in the src directory pls refer them from there**
+-------------------------
+OVERVIEW & CHOSEN MAPPING
+-------------------------
+1) Chosen mapping file (use this one as the canonical correspondence table):
+   - "COMPARISON SUMMARY BNS to IPC .pdf"  (use as primary mapping source). fileciteturn1file1
+     Rationale: This file is a structured correspondence table with summary notes and is suitable as the authoritative programmatic mapping source for many-to-many mappings. Use the other comparative sheet only as a cross-check, not as primary. fileciteturn1file0
+
+2) Statute texts to ingest (use these bare-act PDFs as primary statute sources):
+   - "bns.pdf"  — Bharatiya Nyaya Sanhita (bare act). fileciteturn0file0
+   - "ipc.pdf"  — Indian Penal Code (bare act). fileciteturn0file1
+
+3) Reference system proposal baseline (include full flow & wording from the earlier Section_2 proposal): use the earlier Section_2 draft as the base and extend with exact RAG prep instructions. fileciteturn1file2
+
+-------------------------
+GOAL (Agent Directive)
+-------------------------
+You are an AI prep agent. Your job is to produce a ready-to-ingest statute RAG dataset and retrieval layer from the provided files and mapping. Produce:
+- Clean, section-level statute chunks for IPC and BNS
+- A canonical IPC↔BNS many-to-many mapping table (derived from "COMPARISON SUMMARY BNS to IPC .pdf")
+- Metadata and negative-ingredient rules attached to each statute chunk
+- Vector embeddings + vector DB records for all statute chunks
+- A retrieval script/config and prompt templates for downstream LLM reasoning
+
+Do not make final mapping decisions without flagging low-confidence rows for human legal review.
+
+-------------------------
+EXACT STEPS FOR THE AI AGENT (IMPLEMENTATION INSTRUCTIONS)
+-------------------------
+
+STEP A — Source verification
+1. Open and parse:
+   - bns.pdf (BNS bare act). fileciteturn0file0
+   - ipc.pdf (IPC bare act). fileciteturn0file1
+   - COMPARISON SUMMARY BNS to IPC .pdf (mapping). fileciteturn1file1
+2. Confirm the files are machine-searchable. If pages are image-scans, run OCR with high-accuracy settings (Tesseract LSTM or commercial OCR).
+3. Produce a short parsing report: pages count, any OCR errors detected, pages with complex tables flagged.
+
+STEP B — Canonical chunking (MANDATORY)
+1. Chunk granularity policy:
+   - Chunk one statute section per document chunk.
+   - Each chunk must contain:
+     * law: "IPC" or "BNS"
+     * section_id: canonical numeric id (e.g., IPC 384 / BNS 308)
+     * section_title: exact heading text
+     * section_text: full text of that section (including subclauses)
+     * source_file: filename + page number
+     * source_range: pageno or page-range
+     * chunk_id: deterministic unique id (law_section)
+2. Exclude non-offence boilerplate from statute chunks when building statute DB:
+   - Do NOT include long preliminary chapters (e.g., preamble, general definitions) as statute chunks unless they directly define a used term.
+   - Exception: include definition sections that are frequently referenced (e.g., "dishonestly", "woman", "child") but mark them with metadata "is_definition": true.
+3. Save chunks as JSONL (one JSON object per line). Filename suggestion: `statute_chunks.jsonl`.
+
+STEP C — Attach metadata & ingredient schema
+1. For each statute chunk, attach metadata fields:
+   - law, section_id, section_title, section_text, source_file, source_page
+   - mapped_sections: [] (initially empty; to be filled by mapping table)
+   - offence_type: (one of ['property','person','sexual','public_order','cyber','economic','other']) — auto-suggest via keyword heuristic
+   - mens_rea_required: boolean (if obvious from text)
+   - actus_reus_key_phrases: list (extract short phrases like "puts a person in fear", "dishonestly induces delivery")
+   - severity_hint: (categorical: 'minor','moderate','serious','aggravated') via heuristics
+   - is_definition: boolean
+   - mapping_confidence: float 0.0-1.0 (default: 0.0 until mapping confirmed)
+2. Save enriched chunks to `statute_chunks_enriched.jsonl`.
+
+STEP D — Build canonical IPC↔BNS mapping
+1. Extract rows from "COMPARISON SUMMARY BNS to IPC .pdf". Parse its table rows into structured mapping rows.
+2. Normalize numbers (strip punctuation) and expand comma-separated lists into separate logical pairs (many-to-many handling).
+3. Mapping table schema (CSV/JSON):
+   - mapping_id
+   - ipc_section (nullable)
+   - ipc_title
+   - bns_section (nullable)
+   - bns_title
+   - mapping_type (one of: direct | split | merged | modified | new | deleted)
+   - notes (free text from the PDF)
+   - source_file (COMPARISON SUMMARY BNS to IPC .pdf) and source_page
+   - confidence (automated: 0.0-1.0)
+   - verified (false)
+   - verified_by (null)
+   - verified_date (null)
+4. Auto-assign `mapping_type` using deterministic rules:
+   - single ipc_section ↔ single bns_section -> direct
+   - single ipc_section ↔ multiple bns_sections -> split
+   - multiple ipc_sections ↔ single bns_section -> merged
+   - if mapping text contains "modified","expanded","scope" -> modified
+5. Cross-check every mapping row against the raw section text in statute chunks. If mapping text mentions textual differences (notes), flag `confidence < 0.95`.
+6. Output files: `ipc_bns_mapping.csv` and `ipc_bns_mapping.json` pls refer the json file for template.
+
+STEP E — Enrich mapping into statute chunk metadata
+1. For every mapping row:
+   - Add referenced sections to `mapped_sections` in the corresponding statute chunk(s).
+   - If many-to-many, write mapping entries in both directions.
+   - Update `mapping_confidence` using heuristics and mapping row confidence.
+2. Save updated `statute_chunks_enriched.jsonl`.
+
+STEP F — Negative rules and ingredient rules (hand-curated knowledge)
+1. Create a "negative_rules.json" where each rule entry includes:
+   - rule_id
+   - section_ref (e.g., IPC 384)
+   - mandatory_ingredients: list (e.g., ["fear precedes delivery"])
+   - failure_examples: short textual examples where section does NOT apply
+   - explanation_template: a sentence template the LLM can use when rule fails
+2. Seed negative rules for top 40 common offences (the core set), using the COMPARISON SUMMARY notes and statute text.
+3. Output: `negative_rules.json`.
+
+STEP G — Vectorization & Vector DB ingest
+1. Embedding policy:
+   - Use a legal-domain tuned embedding model if available; otherwise use high-quality base embeddings (OpenAI/Anthropic embeddings or comparable).
+   - Embed the following per vector entry:
+     * chunk_text_for_embedding: Compose a short embedding text that concatenates section_id + section_title + 2–3 line summary + canonical keywords + offence_type metadata.
+     * store metadata: all fields from statute chunk enriched (law, section_id, mapped_sections, is_definition, file refs, offences, mapping_confidence).
+2. Chunk embedding output file: `statute_vectors.jsonl` (include embedding vector and metadata).
+3. Vector DB config:
+   - DB: Pinecone / Milvus / Weaviate / Redis vector store (choose your infra)
+   - Indexing: metric = cosine
+   - Namespace: "statutes_section2"
+   - Replicate key metadata fields (law, section_id, offence_type, mapped_sections)
+4. Retrieval params (default):
+   - top_k = 8
+   - distance_threshold = 0.78 similarity (tune empirically)
+   - rerank: Use a light cross-encoder reranker against top-20 if available to improve precision.
+
+STEP H — Retrieval query construction (from extracted facts)
+1. The fact extractor (downstream LLM) will produce structured facts. Convert those facts to a retrieval query as follows (mandatory):
+   - Query string = concatenate:
+     * Short 1-line fact summary (act + intent + object)
+     * Keywords expansion (use keyword synonym list — see below)
+     * Add a prefix: "Statute search for matching offence ingredients: "
+2. Expand query using the keyword synonyms dictionary (map plain FIR terms to legal concepts).
+3. Run vector search with the constructed query, retrieve top_k statute chunks.
+4. For each retrieved statute chunk, compute a match-score using:
+   - Vector similarity score (primary)
+   - Metadata match bonus (if offence_type or mapped_sections matches facts)
+   - Negative-rule penalty (if failure examples match the facts)
+5. Return top N (default 5) statute chunks plus their metadata to the reasoning LLM.
+
+STEP I — Prompt templates for the LLM (statute-grounded reasoning)
+1. Provide the LLM with a fixed instruction header:
+   - "You are a legal reasoning assistant. Use only the provided statute texts (below) and the negative-ingredient rules. Do NOT hallucinate section numbers or create new mappings."
+2. Input payload to the LLM must include:
+   - Extracted facts JSON
+   - Retrieved statute chunks (full section_text and metadata)
+   - Relevant negative rules (if any)
+   - The mapping table excerpt for the retrieved sections
+3. LLM Task (explicit):
+   - For each retrieved statute chunk, evaluate whether the facts satisfy the legal ingredients.
+   - Output for each section: applicability (Yes/No/Partial), the specific ingredient satisfaction checklist, short reason (1–2 lines), and confidence (0–1).
+   - If multiple sections overlap, provide a ranked list with tie-break rationale.
+   - If mapping exists to BNS, include the mapped BNS section and explain equivalence using the mapping notes.
+4. Required output JSON schema (strict):
+{
+  "factual_summary": "<1-line>",
+  "evaluations": [
+    {
+      "law": "IPC" | "BNS",
+      "section": "384",
+      "mapped_to": ["BNS 308"],
+      "applicability": "Yes" | "Partial" | "No",
+      "ingredient_check": {
+         "ingredient_1": true,
+         "ingredient_2": false
+      },
+      "reason": "Short 1-2 line reason grounded in quoted statute lines",
+      "confidence": 0.0-1.0,
+      "source": {"file":"ipc.pdf", "page": 123}
+    }
+  ],
+  "recommendation": "<short text> (e.g., 'Add 384 IPC, map to BNS 308; include as primary')"
+}
+
+STEP J — Human-in-the-loop verification
+1. Produce a review dashboard listing:
+   - All mapping rows with confidence < 0.95
+   - All statute chunk evaluations where LLM confidence < 0.8
+   - Mappings where mapping_type != 'direct'
+2. Allow a lawyer reviewer to:
+   - Edit mapping_type, notes, and set verified=true
+   - Update negative_rules for edge cases
+3. After legal sign-off, update mapping_confidence to 1.0 and save canonical mapping snapshot with versioning (git-style).
+
+STEP K — Maintenance & update policy
+1. Source-of-truth files: keep original PDFs (`bns.pdf`, `ipc.pdf`, `COMPARISON SUMMARY BNS to IPC .pdf`) immutable and store checksums.
+2. When BNS/IP C is amended:
+   - Re-run parsing + chunking pipeline
+   - Diff chunk text against previous snapshot
+   - Flag changed mappings for legal review
+3. Keep an audit log for every mapping change and the reviewer who approved it.
+
+-------------------------
+SUPPORTING DATAFILES (Agent should create these)
+-------------------------
+- statute_chunks.jsonl
+- statute_chunks_enriched.jsonl
+- ipc_bns_mapping.csv (canonical mapping; derived from COMPARISON SUMMARY BNS to IPC .pdf). fileciteturn1file1
+- negative_rules.json
+- statute_vectors.jsonl
+- retrieval_config.json (top_k, similarity thresholds, reranker settings)
+- prompt_templates.json (fact extraction prompt, statute-reasoning prompt, final-output schema)
+- review_dashboard.csv
+
+-------------------------
+PROMPT EXAMPLES (use exact phrasing for reproducibility)
+-------------------------
+A) Fact→Retrieval query builder (system prompt to converter):
+"Convert these extracted facts to a statute retrieval query. Facts: {facts_json}. Use keyword expansion and produce: 1) one-line query string; 2) a list of core keywords."
+
+B) Statute-grounded reasoning (LLM instruction):
+"Use ONLY the statutes and negative rules attached. For each statute provided, check each legal ingredient against the facts and return the JSON schema specified. Do not add or guess sections not in the retrieved list."
+
+-------------------------
+SYSTEM FLOW (Full flow — include earlier Section_2 flow verbatim as required)
+-------------------------
+(Include the original flow from the Section_2 proposal as part of this file)
+Clean FIR Text
+    ↓
+Fact Extraction (LLM)
+    ↓
+Statute Retrieval (RAG: IPC + BNS)
+    ↓
+Legal Reasoning (LLM)
+    ↓
+Applicable Sections + Explanation
+
+(End of original flow)
+
+-------------------------
+QA METRICS & EVALUATION
+-------------------------
+- Precision@K (for statute retrieval) — target >= 0.85 on curated test set.
+- Ingredient recall (how often mandatory ingredients are detected) — target >= 0.80.
+- Mapping accuracy after legal review — target 100% (post-verification).
+- Hallucination checks: fraction of times LLM returns a section not in retrieved set — target 0%.
+
+-------------------------
+FINAL NOTES & Warnings (Agent must enforce)
+-------------------------
+- Do not trust LLM to create mappings. Use COMPARISON SUMMARY BNS to IPC .pdf as the primary mapping source and require human sign-off for any mapping with confidence < 0.95. fileciteturn1file1
+- Use bns.pdf and ipc.pdf only for statute text; do not use external blog mappings as canonical. fileciteturn0file0turn0file1
+- Preserve provenance: every chunk and mapping row must include `source_file` and `source_page`.
+- Record all changes with reviewer name and timestamp.
+
+-------------------------
+END OF FILE
+-------------------------

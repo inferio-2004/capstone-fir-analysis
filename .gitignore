@@ -1,0 +1,62 @@
+# Environment Variables (CRITICAL - contains API keys)
+.env
+.env.local
+.env.*.local
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+*.egg-info/
+dist/
+build/
+*.egg
+
+# Virtual Environments
+venv/
+env/
+ENV/
+.venv/
+
+# Jupyter Notebooks
+.ipynb_checkpoints/
+*.ipynb
+
+# IDE - VSCode
+.vscode/
+*.code-workspace
+
+# IDE - PyCharm
+.idea/
+*.iml
+
+# IDE - Others
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Logs
+logs/*.jsonl
+*.log
+audit_log.jsonl
+
+# Large output files (can be regenerated)
+output/statute_vectors.jsonl
+output/statute_chunks_complete.jsonl
+
+# Test files
+*.test.py
+test_*.pyc
+
+# OS
+Thumbs.db
+.DS_Store
+desktop.ini
+
+# Temporary files
+*.tmp
+*.bak
+*.cache
