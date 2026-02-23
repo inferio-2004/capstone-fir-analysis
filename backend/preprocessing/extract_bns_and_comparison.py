@@ -13,7 +13,7 @@ from pathlib import Path
 from PyPDF2 import PdfReader
 
 repo_root = Path(__file__).resolve().parents[2]
-src_dir = repo_root / 'src'
+src_dir = repo_root / 'src_dataset_files'
 output_dir = repo_root / 'output'
 output_dir.mkdir(parents=True, exist_ok=True)
 

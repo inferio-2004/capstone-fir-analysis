@@ -219,7 +219,7 @@ Return ONLY valid JSON (no markdown, no code blocks):
         return filtered_chunks
     
     def find_corresponding_sections(self, law, section_id):
-        """Find corresponding IPC/BNS section using statute mappings"""
+        """Find corresponding IPC/BNS section using statute mappings, with LLM fallback."""
         
         corresponding = []
         
@@ -235,7 +235,35 @@ Return ONLY valid JSON (no markdown, no code blocks):
                     'section_id': mapping['ipc']
                 })
         
+        # LLM fallback when static mapping has no entry
+        if not corresponding:
+            target_law = 'BNS' if law == 'IPC' else 'IPC'
+            llm_section = self._llm_map_section(law, section_id, target_law)
+            if llm_section:
+                corresponding.append({
+                    'law': target_law,
+                    'section_id': llm_section
+                })
+        
         return corresponding
+
+    def _llm_map_section(self, source_law, section_id, target_law):
+        """Use Groq LLM to find the corresponding BNS/IPC section when static mapping is missing."""
+        try:
+            prompt = f"""What is the corresponding {target_law} (Bharatiya Nyaya Sanhita) section number for {source_law} Section {section_id} (Indian Penal Code)?
+Reply with ONLY the section number (e.g. "309"). If unsure, reply "unknown"."""
+
+            result = self.llm_intent.invoke(prompt).content.strip()
+            # Extract just the number
+            import re
+            m = re.search(r'\b(\d+[A-Za-z]*)\b', result)
+            if m and result.lower() != 'unknown':
+                mapped = m.group(1)
+                print(f"  [LLM Mapping] {source_law} {section_id} → {target_law} {mapped}")
+                return mapped
+        except Exception as e:
+            print(f"  [LLM Mapping] Failed for {source_law} {section_id}: {e}")
+        return None
     
     def get_section_extract(self, law, section_id):
         """Get text extract from a statute section"""
@@ -449,7 +477,7 @@ Return ONLY valid JSON (no markdown, no code blocks):
 def create_sample_fir():
     """Load sample FIR from JSON file"""
     repo_root = Path(__file__).resolve().parents[2]
-    fir_path = repo_root / 'src' / 'fir_sample.json'
+    fir_path = repo_root / 'src_dataset_files' / 'fir_sample.json'
 
     with open(fir_path, 'r', encoding='utf-8') as f:
         fir_data = json.load(f)

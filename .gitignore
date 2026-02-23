@@ -43,9 +43,16 @@ logs/*.jsonl
 *.log
 audit_log.jsonl
 
-# Large output files (can be regenerated)
+# Large / generated output files (can be regenerated)
 output/statute_vectors.jsonl
 output/statute_chunks_complete.jsonl
+output/kanoon_cache/
+output/legalqa_cache/
+output/prototype_demo_output.json
+*.npy
+
+# Archives
+*.zip
 
 # Test files
 *.test.py

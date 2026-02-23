@@ -1,143 +1,135 @@
-# FIR Analysis System - AI-Powered Legal Document Processing
+# LexIR — AI-Powered FIR Analysis & Legal Precedent System
 
-An intelligent system that analyzes First Information Reports (FIRs) using NLP and legal text embeddings to automatically classify applicable IPC and BNS sections.
+An end-to-end legal intelligence application that analyses First Information Reports (FIRs), identifies applicable IPC & BNS sections using RAG, retrieves real court precedents from Indian Kanoon, and predicts likely verdicts — all through a React + FastAPI WebSocket interface.
+
+---
 
 ## Features
 
-✅ **OCR-based FIR Digitization** - Extract text from scanned/handwritten FIR documents  
-✅ **NLP-Powered Analysis** - Automatic extraction of legal concepts from FIR text  
-✅ **Statute Classification** - Automated mapping to applicable IPC and BNS sections  
-✅ **Explicit Mappings** - View overlapping IPC ↔ BNS provisions  
+| Stage | What it does |
+|-------|-------------|
+| **Stage 1 — FIR Analysis** | RAG chain (Pinecone + Groq LLM) classifies the FIR into applicable IPC sections and maps them to corresponding BNS sections |
+| **Stage 2 — Precedent Search & Verdict Prediction** | Searches Indian Kanoon API for real case law, summarises each judgment with Groq LLM, and predicts the likely verdict/punishment |
+| **Stage 3 — Legal Q&A** | Ask follow-up questions about the FIR — answered by Groq LLM using the analysis context |
+
+---
+
+## Tech Stack
+
+| Layer | Technology |
+|-------|-----------|
+| Frontend | React 19, Lucide icons |
+| Backend | FastAPI, WebSocket, Python 3.10+ |
+| LLM | Groq (`llama-3.1-8b-instant`, `openai/gpt-oss-120b`) |
+| Embeddings | SentenceTransformers (`all-MiniLM-L6-v2`) |
+| Vector DB | Pinecone (serverless) |
+| Case Law | Indian Kanoon API |
+| Utilities | LangChain, python-dotenv, requests |
 
 ---
 
 ## Prerequisites
 
-- **Python 3.8+**
-- **Tesseract OCR** (for handwritten/scanned FIR processing)
-- **Git**
-- **API Keys** (Groq, Pinecone) - see setup below
+| Requirement | Version |
+|-------------|---------|
+| Python | 3.10 or higher |
+| Node.js | 18 or higher (with npm) |
+| Git | any recent version |
+| API Keys | Groq, Pinecone, Indian Kanoon (see below) |
 
 ---
 
-## Installation
+## Quick Start
 
-### 1. Clone the Repository
+### 1. Clone the repository
 
 ```bash
 git clone https://github.com/inferio-2004/capstone-fir-analysis.git
 cd capstone-fir-analysis
 ```
 
-### 2. Create Virtual Environment
+### 2. Create the `.env` file
 
-```bash
-# Windows
-python -m venv venv
-venv\Scripts\activate
+Create a file named `.env` **in the project root** (same level as this README):
 
-# macOS/Linux
-python3 -m venv venv
-source venv/bin/activate
-```
-
-### 3. Install Python Dependencies
-
-```bash
-pip install -r requirements.txt
-```
-
-### 4. Install Tesseract OCR
-
-**Windows:**
-- Download installer: https://github.com/UB-Mannheim/tesseract/wiki
-- Run the installer (default: `C:\Program Files\Tesseract-OCR`)
-- Add to `.env`: `TESSERACT_PATH=C:\Program Files\Tesseract-OCR\tesseract.exe`
-
-**macOS:**
-```bash
-brew install tesseract
-```
-
-**Linux (Ubuntu):**
-```bash
-sudo apt-get install tesseract-ocr
-```
-
----
-
-## API Setup
-
-### Get Groq API Key
-
-1. Go to https://console.groq.com/keys
-2. Sign up (free account)
-3. Click "Create API Key"
-4. Copy the key
-
-### Get Pinecone API Key
-
-1. Go to https://www.pinecone.io/
-2. Sign up (free tier available)
-3. Create a project
-4. Navigate to API Keys section
-5. Copy your API key and index name
-
----
-
-## Configuration
-
-### 1. Create `.env` File
-
-Create a `.env` file in the project root:
-
-```
-# Groq LLM API
+```env
+# Groq LLM  —  https://console.groq.com/keys  (free tier)
 GROQ_API_KEY=your_groq_api_key_here
 
-# Pinecone Vector DB
+# Pinecone Vector DB  —  https://www.pinecone.io/  (free tier)
 PINECONE_API_KEY=your_pinecone_api_key_here
-PINECONE_INDEX_NAME=statute-embeddings
-PINECONE_ENVIRONMENT=us-east-1
 
-# Optional: Tesseract Path (Windows only, if not in default location)
-TESSERACT_PATH=C:\Program Files\Tesseract-OCR\tesseract.exe
+# Indian Kanoon  —  https://api.indiankanoon.org/  (500 free calls/day)
+KANOON_API_KEY=your_kanoon_api_key_here
 ```
 
-**⚠️ IMPORTANT:** Never commit `.env` file - it's in `.gitignore` by default
+> **How to get the keys:**
+>
+> | Service | Steps |
+> |---------|-------|
+> | **Groq** | Sign up at https://console.groq.com → API Keys → Create API Key |
+> | **Pinecone** | Sign up at https://www.pinecone.io → Create a project → API Keys |
+> | **Indian Kanoon** | Register at https://api.indiankanoon.org → get your token |
 
-### 2. Load Environment Variables
+### 3. Set up the backend
 
-The code uses `python-dotenv` to automatically load `.env` - no additional setup needed.
+```bash
+# Create & activate a virtual environment
+python -m venv venv
+
+# Windows
+venv\Scripts\activate
+# macOS / Linux
+source venv/bin/activate
+
+# Install Python dependencies
+pip install -r backend/requirements.txt
+```
+
+### 4. Set up the frontend
+
+```bash
+cd frontend
+npm install
+cd ..
+```
+
+> `npm install` reads `frontend/package.json` and installs all dependencies automatically.  
+> If you prefer to install them manually:
+> ```bash
+> cd frontend
+> npm install react react-dom react-scripts lucide-react web-vitals @testing-library/react @testing-library/jest-dom @testing-library/dom @testing-library/user-event
+> ```
+
+### 5. Start the servers
+
+Open **two terminals** from the project root:
+
+**Terminal 1 — Backend (port 8000):**
+```bash
+cd backend
+uvicorn server:app --reload --host 0.0.0.0 --port 8000
+```
+
+**Terminal 2 — Frontend (port 3000):**
+```bash
+cd frontend
+npm start
+```
+
+### 6. Open the app
+
+Navigate to **http://localhost:3000** in your browser.  
+The app connects to the backend via WebSocket at `ws://localhost:8000/ws`.
 
 ---
 
-## Running the System
+## Usage
 
-### Test Vector Database Connection
-
-```bash
-python preprocessing/test_vector_db.py
-```
-
-Expected output:
-```
-✓ Pinecone connected
-✓ Embedding model loaded
-✓ Embeddings are searchable
-```
-
-### Analyze a FIR
-
-```bash
-python backend/api/rag_llm_chain_prompting.py
-```
-
-### Extract Text from Scanned FIR
-
-```bash
-python backend/api/ocr_to_fir.py /path/to/fir_image.jpg output.json
-```
+1. **Submit a FIR** — Paste FIR text into the form or click "Use Sample FIR" to load a pre-defined example.
+2. **Stage 1** — The system identifies applicable IPC sections and their BNS equivalents.
+3. **Stage 2** — Real court cases matching those sections are fetched from Indian Kanoon, summarised, and a verdict prediction is shown.
+4. **Ask Questions** — Type any follow-up question in the chat input (e.g., "What is the maximum punishment under IPC 323?").
 
 ---
 
@@ -145,75 +137,134 @@ python backend/api/ocr_to_fir.py /path/to/fir_image.jpg output.json
 
 ```
 capstone-fir-analysis/
+├── .env                                # API keys (not committed)
+├── README.md
+│
 ├── backend/
-│   ├── api/
-│   │   ├── ocr_to_fir.py              # OCR pipeline
-│   │   ├── rag_llm_chain_prompting.py # Main analysis engine
-│   │   └── retrieval_query_constructor.py
-│   └── preprocessing/
-│       ├── extract_bns_and_comparison.py
-│       └── extract_final.py
-├── preprocessing/
-│   ├── deploy_to_pinecone.py
-│   ├── test_vector_db.py
-│   └── rag_llm_integration.py
-├── src/
-│   ├── fir_sample.json               # Sample FIR input
-│   ├── bns.pdf                       # BNS statute document
-│   └── Section2_RAG_Instructions_for_AI.txt
-├── output/                            # Generated outputs
-│   ├── bns_ipc_mappings_final.json
-│   ├── fir_analysis_result.json
-│   └── statute_vectors.jsonl
-├── logs/                              # Audit logs
-└── .env                               # Local configuration (not committed)
+│   ├── requirements.txt                # Python dependencies
+│   ├── server.py                       # FastAPI + WebSocket server
+│   └── api/
+│       ├── indian_kanoon.py            # Indian Kanoon search, summarise, verdict
+│       ├── rag_llm_chain_prompting.py  # Stage 1 RAG chain (Pinecone + Groq)
+│       ├── precedent_qa.py             # Groq LLM wrapper for Q&A
+│       ├── ocr_to_fir.py              # OCR pipeline (optional)
+│       ├── case_similarity.py          # Case-similarity utilities
+│       ├── legalqa_index.py            # Embedding-based QA (legacy)
+│       └── retrieval_query_constructor.py
+│
+├── frontend/
+│   ├── package.json                    # Node dependencies
+│   └── src/
+│       ├── App.js / App.css            # Root component & styles
+│       ├── hooks/
+│       │   └── useLexIR.js             # WebSocket hook
+│       └── components/
+│           ├── ChatArea.js             # Main chat + stage cards
+│           ├── ChatInput.js            # Message input bar
+│           ├── FIRForm.js              # FIR submission form
+│           ├── Sidebar.js              # Connection status sidebar
+│           ├── Stage1Card.js           # IPC/BNS analysis display
+│           └── Stage2Card.js           # Kanoon cases + verdict display
+│
+├── preprocessing/                      # One-time data prep scripts
+│   ├── deploy_to_pinecone.py           # Upload statute vectors to Pinecone
+│   ├── rag_llm_integration.py          # RAG integration testing
+│   └── test_vector_db.py              # Verify Pinecone connection
+│
+├── output/                             # Generated data & caches
+│   ├── ipc_bns_mappings_complete.json
+│   ├── fir_analysis_result_chains.json
+│   ├── kanoon_cache/                   # Cached Kanoon API responses
+│   └── ...
+│
+├── src_dataset_files/                  # Source datasets
+│   ├── fir_sample.json
+│   ├── ipc_bns_mapping_starter.json
+│   └── IndicLegalQA Dataset_10K.json
+│
+└── logs/
+    └── audit_log.jsonl
 ```
+
+---
+
+## Backend Dependencies (`backend/requirements.txt`)
+
+| Package | Purpose |
+|---------|---------|
+| `fastapi` | Web framework + WebSocket support |
+| `uvicorn[standard]` | ASGI server |
+| `websockets` | WebSocket protocol |
+| `python-multipart` | File upload handling |
+| `groq` | Groq LLM client |
+| `langchain-groq` | LangChain ↔ Groq bridge |
+| `langchain-core` | Prompt templates, output parsers |
+| `sentence-transformers` | MiniLM-L6 embedding model |
+| `pinecone-client` | Pinecone vector DB SDK |
+| `numpy` | Array operations |
+| `requests` | HTTP client (Indian Kanoon API) |
+| `python-dotenv` | `.env` file loader |
+| `pydantic` | Data validation |
+| `PyPDF2` | PDF parsing (preprocessing) |
+
+### Optional (OCR support)
+
+```bash
+pip install pytesseract Pillow pdf2image
+```
+Also requires [Tesseract OCR](https://github.com/UB-Mannheim/tesseract/wiki) installed on the system.
+
+---
+
+## Frontend Dependencies (`frontend/package.json`)
+
+| Package | Purpose |
+|---------|---------|
+| `react` / `react-dom` | UI framework (v19) |
+| `react-scripts` | Create React App tooling |
+| `lucide-react` | Icon library |
+| `web-vitals` | Performance monitoring |
+
+---
+
+## Environment Variables
+
+| Variable | Required | Description |
+|----------|----------|-------------|
+| `GROQ_API_KEY` | Yes | Groq API key for LLM calls |
+| `PINECONE_API_KEY` | Yes | Pinecone API key for vector search |
+| `KANOON_API_KEY` | Yes | Indian Kanoon API token |
 
 ---
 
 ## Troubleshooting
 
-### Issue: "Groq API key not found"
-**Solution:** Ensure `.env` file exists in project root with correct `GROQ_API_KEY`
-
-### Issue: "Tesseract not found"
-**Solution:** Install Tesseract OCR (see Installation section)
-
-### Issue: "Pinecone connection failed"
-**Solution:** 
-- Check internet connection
-- Verify `PINECONE_API_KEY` in `.env`
-- Ensure index `statute-embeddings` exists in Pinecone console
-
-### Issue: "pytesseract not installed"
-**Solution:** 
-```bash
-pip install pytesseract pillow pdf2image
-```
+| Problem | Solution |
+|---------|----------|
+| `GROQ_API_KEY not found` | Ensure `.env` exists in the project root with the correct key |
+| `Pinecone connection failed` | Check `PINECONE_API_KEY` and that the `statute-embeddings` index exists |
+| `KANOON_API_KEY is not set` | Add the Indian Kanoon token to `.env` |
+| WebSocket won't connect | Make sure the backend is running on port 8000; check CORS |
+| `ModuleNotFoundError` | Activate the virtual environment and run `pip install -r backend/requirements.txt` |
+| Frontend build errors | Run `npm install` inside `frontend/` |
+| Kanoon returns no results | You may have hit the 500-call daily limit; wait until the next day |
 
 ---
 
-## Technology Stack
+## API Endpoints (Backend)
 
-**Core Technologies:**
-- **Neural Embeddings:** SentenceTransformers (all-MiniLM-L6-v2)
-- **Vector Database:** Pinecone
-- **Chain Prompting:** LangChain + Groq LLMs
-- **OCR Pipeline:** Tesseract, pytesseract, PIL
+| Endpoint | Type | Description |
+|----------|------|-------------|
+| `GET /` | HTTP | Health check (`{ "status": "ok", ... }`) |
+| `/ws` | WebSocket | Main communication channel for all stages |
 
-**Backend:**
-- Python 3.8+
-- LangChain, sentence-transformers
-- Groq API, Pinecone SDK
+### WebSocket Message Types (client → server)
 
----
-
-## Contributing
-
-1. Create a feature branch: `git checkout -b feature/your-feature`
-2. Commit changes: `git commit -m "Add feature"`
-3. Push to branch: `git push origin feature/your-feature`
-4. Create Pull Request
+| `type` | Payload | Action |
+|--------|---------|--------|
+| `start_analysis` | `{ fir }` | Run Stage 1 (RAG) + Stage 2 (Kanoon + verdict) |
+| `full_analysis` | `{ fir }` | Same as above (alias) |
+| `ask_question` | `{ question }` | Stage 3 follow-up Q&A |
 
 ---
 
@@ -223,14 +274,4 @@ This project is part of a capstone initiative. Contact the team for licensing de
 
 ---
 
-## Support
-
-For issues or questions:
-1. Check the Troubleshooting section
-2. Review API documentation:
-   - Groq: https://console.groq.com/docs
-   - Pinecone: https://docs.pinecone.io/
-
----
-
-**Last Updated:** January 28, 2026 
+**Last Updated:** February 23, 2026
