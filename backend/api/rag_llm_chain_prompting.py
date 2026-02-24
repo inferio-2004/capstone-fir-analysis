@@ -189,6 +189,60 @@ Return ONLY valid JSON (no markdown, no code blocks):
                 })
         
         return retrieved_chunks
+
+    def _intent_to_retrieval_queries(self, primary_intent, secondary_intents=None):
+        """Map identified criminal intent to targeted retrieval queries.
+
+        The raw FIR text often has low cosine similarity with legal statute
+        language (e.g. dowry FIR vs IPC 498A text = 0.39).  This method
+        generates focused queries using legal terminology that the vector DB
+        will match more accurately.
+        """
+        queries = []
+        intent_lower = primary_intent.lower() if primary_intent else ""
+
+        INTENT_QUERY_MAP = {
+            "dowry":              ["cruelty by husband demanding dowry Section 498A",
+                                   "dowry death dowry prohibition harassment married woman"],
+            "domestic violence":  ["cruelty by husband wife subjected to cruelty Section 498A",
+                                   "voluntarily causing hurt assault"],
+            "sexual":             ["sexual assault outraging modesty of woman",
+                                   "rape sexual offence against women"],
+            "murder":             ["murder culpable homicide causing death"],
+            "kidnap":             ["kidnapping abduction wrongful confinement"],
+            "robbery":            ["robbery extortion dacoity snatching"],
+            "theft":              ["theft dishonest misappropriation criminal breach of trust"],
+            "cheat":              ["cheating fraud dishonestly inducing delivery"],
+            "assault":            ["voluntarily causing hurt grievous hurt"],
+            "hurt":               ["voluntarily causing hurt grievous hurt simple"],
+            "defam":              ["defamation imputation harm reputation"],
+            "intimidat":          ["criminal intimidation threat"],
+            "cruelty":            ["cruelty by husband demanding dowry Section 498A"],
+            "harassment":         ["cruelty by husband demanding dowry harassment married woman"],
+        }
+
+        all_intents = [intent_lower] + [s.lower() for s in (secondary_intents or [])]
+
+        for keyword, qs in INTENT_QUERY_MAP.items():
+            for intent_text in all_intents:
+                if keyword in intent_text:
+                    queries.extend(qs)
+
+        # Fallback: use the raw intent string
+        if not queries:
+            queries.append(f"{primary_intent} Indian Penal Code section")
+
+        return list(dict.fromkeys(queries))  # deduplicate, preserve order
+
+    def _merge_chunks(self, base_chunks, new_chunks):
+        """Merge two chunk lists, deduplicated by chunk_id, preserving order."""
+        seen = {c['chunk_id'] for c in base_chunks}
+        merged = list(base_chunks)
+        for c in new_chunks:
+            if c['chunk_id'] not in seen:
+                seen.add(c['chunk_id'])
+                merged.append(c)
+        return merged
     
     def apply_negative_rules_filter(self, chunks, case_facts):
         """Filter chunks using negative rules"""
@@ -310,7 +364,7 @@ Reply with ONLY the section number (e.g. "309"). If unsure, reply "unknown"."""
         # STEP 0: Retrieve relevant statutes from vector DB
         print("\n[STEP 0] Retrieving relevant statute sections from vector DB...")
         query_text = f"{fir_data.get('incident_description', '')} {fir_data.get('victim_impact', '')}"
-        retrieved_chunks = self.retrieve_relevant_statutes(query_text, top_k=10)
+        retrieved_chunks = self.retrieve_relevant_statutes(query_text, top_k=20)
         print(f"✓ Retrieved {len(retrieved_chunks)} statute chunks")
         
         # Apply negative rules filter
@@ -352,15 +406,33 @@ Reply with ONLY the section number (e.g. "309"). If unsure, reply "unknown"."""
         print(f"\n✓ Primary Intent: {intent_result.get('primary_intent', 'Unknown')}")
         print(f"✓ Confidence: {intent_result.get('confidence', 0)}")
         
+        # STEP 1.7: Intent-driven second retrieval pass
+        # After identifying the intent, generate targeted queries using legal
+        # terminology to catch sections the raw FIR embedding missed.
+        # e.g. "Dowry Harassment" → query "cruelty by husband demanding dowry Section 498A"
+        print("\n[STEP 1.7] Intent-driven retrieval (second pass)...")
+        intent_queries = self._intent_to_retrieval_queries(
+            intent_result.get('primary_intent', ''),
+            intent_result.get('secondary_intents', []),
+        )
+        for iq in intent_queries:
+            print(f"  → Retrieving for: \"{iq}\"")
+            extra_chunks = self.retrieve_relevant_statutes(iq, top_k=5)
+            filtered_chunks = self._merge_chunks(filtered_chunks, extra_chunks)
+        print(f"✓ After intent-driven retrieval: {len(filtered_chunks)} unique chunks")
+        
+        # Re-sort by similarity score so the most relevant chunks are first
+        filtered_chunks.sort(key=lambda c: c.get('similarity_score', 0), reverse=True)
+        
         # STEP 2: Chain - Legal Reasoning (uses output from Step 1)
         print("\n" + "-"*80)
         print("[CHAIN PROMPT 2] LEGAL REASONING (Using Intent from Chain 1)")
         print("-"*80)
         
-        # Prepare statute context from retrieved chunks
+        # Prepare statute context from retrieved chunks (top 10 after merge+sort)
         statute_context = "\n".join([
             f"[{chunk['law']} {chunk['section_id']}] {chunk['section_text']}"
-            for chunk in filtered_chunks[:5]
+            for chunk in filtered_chunks[:10]
         ])
         
         reasoning_input = {
@@ -398,16 +470,21 @@ Reply with ONLY the section number (e.g. "309"). If unsure, reply "unknown"."""
         
         enriched_statutes = []
         for statute in reasoning_result.get('applicable_statutes', []):
-            # Parse section
-            section_parts = statute.get('section', '').strip().split()
-            if len(section_parts) >= 2:
-                law = section_parts[0]
-                section_id = section_parts[1]
+            # Parse section — handle "IPC 498A", "BNS 85", "498A", "IPC Section 498A"
+            import re as _re
+            section_raw = statute.get('section', '').strip()
+            m = _re.match(r'(?:IPC|BNS)\s+(?:Section\s+)?(.+)', section_raw, _re.IGNORECASE)
+            if m:
+                law = 'IPC' if section_raw.upper().startswith('IPC') else 'BNS'
+                section_id = m.group(1).strip()
             else:
-                section_str = statute.get('section', 'IPC 394')
-                parts = section_str.split()
-                law = parts[0] if parts else 'IPC'
-                section_id = parts[-1] if parts else '394'
+                section_parts = section_raw.split()
+                if len(section_parts) >= 2:
+                    law = section_parts[0]
+                    section_id = section_parts[1]
+                else:
+                    law = 'IPC'
+                    section_id = section_parts[-1] if section_parts else '394'
             
             # Find corresponding section
             corresponding = self.find_corresponding_sections(law, section_id)
