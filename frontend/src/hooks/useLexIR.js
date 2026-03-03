@@ -130,15 +130,6 @@ export function useLexIR(url = 'ws://localhost:8000/ws') {
     send(payload);
   }, [send, addChat]);
 
-  const runFullAnalysis = useCallback((firData = null) => {
-    setLoading(true); setError(null);
-    setStage1(null); setStage2(null); setQaAnswers([]);
-    const payload = { type: 'run_full_analysis' };
-    if (firData) payload.fir = firData;
-    addChat('user', 'Running full RAG analysis (may take 30-60 s)...', { isFirSubmit: true });
-    send(payload);
-  }, [send, addChat]);
-
   const askQuestion = useCallback((question) => {
     if (!question.trim()) return;
     setLoading(true); setError(null);
@@ -157,6 +148,6 @@ export function useLexIR(url = 'ws://localhost:8000/ws') {
   return {
     connected, status, currentStage, loading, error,
     fir, stage1, stage2, qaAnswers, chatMessages,
-    startAnalysis, runFullAnalysis, askQuestion, showCases, resetChat,
+    startAnalysis, askQuestion, showCases, resetChat,
   };
 }

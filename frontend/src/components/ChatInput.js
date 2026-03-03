@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Send } from 'lucide-react';
+import './ChatInput.css';
 
 export default function ChatInput({ onSend, disabled, placeholder }) {
   const [text, setText] = useState('');

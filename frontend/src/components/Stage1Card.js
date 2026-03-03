@@ -1,5 +1,6 @@
 import React from 'react';
 import { Shield, Scale, FileText, AlertTriangle } from 'lucide-react';
+import './Stage1Card.css';
 
 export default function Stage1Card({ data }) {
   if (!data) return null;

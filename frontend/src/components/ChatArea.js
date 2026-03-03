@@ -1,5 +1,6 @@
 import React, { useRef, useEffect } from 'react';
 import { Bot, User, Info, AlertCircle, Loader2 } from 'lucide-react';
+import './ChatArea.css';
 import Stage1Card from './Stage1Card';
 import Stage2Card from './Stage2Card';
 

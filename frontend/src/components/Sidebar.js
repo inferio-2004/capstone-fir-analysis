@@ -1,5 +1,6 @@
 import React from 'react';
 import { Wifi, WifiOff, RotateCcw } from 'lucide-react';
+import './Sidebar.css';
 
 export default function Sidebar({ connected, currentStage, onReset, onShowCases, hasAnalysis }) {
   return (

@@ -10,7 +10,7 @@ import os
 import textwrap
 from groq import Groq
 from dotenv import load_dotenv
-from model_config import get_preferred_groq_model
+from model_config import groq_chat_with_fallback
 
 load_dotenv()
 
@@ -28,11 +28,9 @@ Rules:
 class PrecedentQA:
     """Synthesize answers from retrieved legal QA precedents using Groq LLM."""
 
-    def __init__(self, model: str | None = None):
-        model = model or get_preferred_groq_model("llama-3.1-8b-instant")
+    def __init__(self):
         self.client = Groq(api_key=os.environ.get("GROQ_API_KEY"))
-        self.model = model
-        print(f"[PrecedentQA] Groq LLM ready ({model})")
+        print(f"[PrecedentQA] Groq LLM ready (role=qa, fallback enabled)")
 
     def synthesize(self, user_question: str, retrieval_result: dict,
                    fir_summary: str = "", mapped_sections: list = None) -> str:
@@ -68,10 +66,11 @@ class PrecedentQA:
             f"User Question: {user_question}"
         )
 
-        # Call Groq LLM
+        # Call Groq LLM with fallback
         try:
-            response = self.client.chat.completions.create(
-                model=self.model,
+            return groq_chat_with_fallback(
+                self.client,
+                role="qa",
                 messages=[
                     {"role": "system", "content": SYSTEM_PROMPT},
                     {"role": "user", "content": user_msg},
@@ -79,7 +78,6 @@ class PrecedentQA:
                 temperature=0.3,
                 max_tokens=500,
             )
-            return response.choices[0].message.content.strip()
         except Exception as e:
             return f"[LLM Error] {e}"
 

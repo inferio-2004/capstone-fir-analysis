@@ -84,12 +84,10 @@ function App() {
           </div>
         </header>
 
-        {/* FIR Form (shown when no analysis yet) */}
-        {!hasAnalysis && (
-          <div className="form-container">
-            <FIRForm onSubmit={startAnalysis} disabled={loading || !connected} />
-          </div>
-        )}
+        {/* FIR Form (always visible — collapsed after analysis) */}
+        <div className="form-container">
+          <FIRForm onSubmit={startAnalysis} disabled={loading || !connected} hasAnalysis={hasAnalysis} />
+        </div>
 
         {/* Chat area */}
         <ChatArea messages={chatMessages} loading={loading} />
