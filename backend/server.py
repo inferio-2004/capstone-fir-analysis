@@ -43,6 +43,7 @@ from pathlib import Path
 from typing import Optional
 
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect, UploadFile, File, HTTPException
+from fastapi.responses import Response
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 
@@ -158,6 +159,40 @@ async def get_sample_fir():
 async def submit_fir_json(fir: FIRInput):
     """Accept a FIR as JSON and store it for the next WebSocket session."""
     return {"status": "ok", "fir": fir.dict()}
+
+
+@app.post("/api/fir/pdf-payload")
+async def get_fir_pdf_payload(fir: FIRInput):
+    """Return mapped key-value payload that can be sent to a PDF form-filler API."""
+    from fir_pdf_mapper import build_fir_pdf_payload
+
+    payload = build_fir_pdf_payload(fir.dict())
+    return {"status": "ok", "pdf_payload": payload}
+
+
+class FIRPdfRequest(BaseModel):
+    """Request body for PDF generation — FIR input + optional analysis output."""
+    fir: dict
+    analysis: Optional[dict] = None
+
+
+@app.post("/api/fir/pdf")
+async def generate_fir_pdf(req: FIRPdfRequest):
+    """Generate a filled FIR PDF (FORM IF-1) and return it as a downloadable file."""
+    from fir_pdf_mapper import build_fir_pdf_payload
+    from fir_pdf_generator import generate_fir_pdf as _gen_pdf
+
+    payload = build_fir_pdf_payload(req.fir, req.analysis)
+    pdf_bytes = _gen_pdf(payload["fields"])
+
+    fir_id = req.fir.get("fir_id", "FIR")
+    filename = f"{fir_id}.pdf"
+
+    return Response(
+        content=pdf_bytes,
+        media_type="application/pdf",
+        headers={"Content-Disposition": f'attachment; filename="{filename}"'},
+    )
 
 
 @app.post("/api/fir/upload")
@@ -369,6 +404,7 @@ async def _handle_start_analysis(msg, session_id, send, send_status):
 
     # Format stage 1 result for the frontend
     stage1_data = _format_stage1(fir_data, analysis, mapped_sections)
+    stage1_data["_raw_analysis"] = analysis  # included for PDF generation
     await send({"type": "stage1_result", "stage": 1, "data": stage1_data})
     _audit("stage1_complete", session_id)
 
@@ -437,6 +473,7 @@ async def _handle_full_analysis(msg, session_id, send, send_status):
     ctx["fir_summary"] = fir_summary
 
     stage1_data = _format_stage1(fir_data, analysis, mapped_sections)
+    stage1_data["_raw_analysis"] = analysis  # included for PDF generation
     await send({"type": "stage1_result", "stage": 1, "data": stage1_data})
     _audit("stage1_live_complete", session_id)
 

@@ -207,6 +207,39 @@ body {
   white-space: nowrap;
 }
 
+/* Top bar actions group */
+.top-bar-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+/* PDF download button */
+.btn-pdf-download {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 16px;
+  border: 1px solid var(--accent);
+  border-radius: var(--radius-sm);
+  background: var(--accent-dim);
+  color: var(--accent-hover);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s;
+  font-family: var(--font);
+  white-space: nowrap;
+}
+.btn-pdf-download:hover:not(:disabled) {
+  background: var(--accent);
+  color: #fff;
+}
+.btn-pdf-download:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
 /* Form container */
 .form-container {
   padding: 20px 24px 0;
@@ -893,6 +926,107 @@ body {
   background: var(--bg-input);
   border-radius: var(--radius-sm);
   border-left: 3px solid var(--accent);
+}
+
+/* ---- Section Influence on Verdict ---- */
+.influence-card {
+  background: linear-gradient(135deg, rgba(99,102,241,0.06), rgba(34,197,94,0.05));
+  border: 1px solid rgba(99,102,241,0.2);
+  border-radius: var(--radius);
+  padding: 16px;
+  margin-bottom: 16px;
+}
+.influence-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--accent);
+  margin-bottom: 4px;
+}
+.influence-header h4 {
+  font-size: 15px;
+  font-weight: 700;
+  margin: 0;
+}
+.influence-subtitle {
+  font-size: 11px;
+  color: var(--text-muted);
+  margin: 0 0 14px 0;
+}
+.influence-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.influence-item {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 10px 12px;
+}
+.influence-item-top {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+.influence-rank {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text-muted);
+  min-width: 22px;
+}
+.influence-section {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-primary);
+  flex: 1;
+}
+.influence-pct {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text-primary);
+  min-width: 36px;
+  text-align: right;
+}
+.influence-level-badge {
+  font-size: 10px;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+}
+.influence-badge-primary {
+  background: rgba(239,68,68,0.15);
+  color: #ef4444;
+}
+.influence-badge-supporting {
+  background: rgba(245,158,11,0.15);
+  color: #f59e0b;
+}
+.influence-badge-minor {
+  background: rgba(148,163,184,0.15);
+  color: #94a3b8;
+}
+.influence-bar-track {
+  width: 100%;
+  height: 6px;
+  background: var(--bg-input);
+  border-radius: 3px;
+  overflow: hidden;
+  margin-bottom: 4px;
+}
+.influence-bar-fill {
+  height: 100%;
+  border-radius: 3px;
+  transition: width 0.6s ease;
+}
+.influence-reasoning {
+  font-size: 11px;
+  color: var(--text-muted);
+  line-height: 1.5;
+  margin-top: 4px;
 }
 
 /* ---- Case Summaries ---- */

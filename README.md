@@ -124,6 +124,23 @@ The app connects to the backend via WebSocket at `ws://localhost:8000/ws`.
 
 ---
 
+## Model Benchmarking (Groq)
+
+Run the automated summarization benchmark (extractive + abstractive metrics) and auto-select the best Groq model:
+
+```bash
+python backend/evaluation/benchmark_groq_summarization.py
+```
+
+This writes `output/model_benchmark_latest.json` with:
+- ranked comparison of 3 available Groq models,
+- time + estimated cost comparison,
+- extractive metrics: ROUGE, BLEU, METEOR,
+- abstractive metrics: faithfulness + hallucination,
+- `best_model` used automatically by Stage 2/Stage 3 modules unless `GROQ_MODEL` is set.
+
+---
+
 ## Usage
 
 1. **Submit a FIR** — Paste FIR text into the form or click "Use Sample FIR" to load a pre-defined example.
@@ -257,6 +274,7 @@ Also requires [Tesseract OCR](https://github.com/UB-Mannheim/tesseract/wiki) ins
 |----------|------|-------------|
 | `GET /` | HTTP | Health check (`{ "status": "ok", ... }`) |
 | `/ws` | WebSocket | Main communication channel for all stages |
+| `POST /api/fir/pdf-payload` | HTTP | Convert FIR JSON into key-value payload for PDF form-fill APIs |
 
 ### WebSocket Message Types (client → server)
 

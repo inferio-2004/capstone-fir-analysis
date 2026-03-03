@@ -1,0 +1,223 @@
+{
+  "timestamp_utc": "2026-03-01T05:50:13.029186+00:00",
+  "cases": [
+    {
+      "case_id": "c1_armed_robbery",
+      "incident": "Two men threatened a woman with a knife and snatched her gold chain and phone while causing cuts and bruises.",
+      "expected_intent": "Robbery",
+      "expected_sections": [
+        "356",
+        "394",
+        "398",
+        "324"
+      ]
+    },
+    {
+      "case_id": "c2_house_theft",
+      "incident": "Unknown person entered a locked house at night and stole cash and jewellery without confronting anyone.",
+      "expected_intent": "Theft",
+      "expected_sections": [
+        "380",
+        "454"
+      ]
+    },
+    {
+      "case_id": "c3_dowry_cruelty",
+      "incident": "Husband and in-laws repeatedly demanded dowry, threatened wife, and subjected her to mental and physical cruelty.",
+      "expected_intent": "Cruelty",
+      "expected_sections": [
+        "498A",
+        "506"
+      ]
+    },
+    {
+      "case_id": "c4_cheating_trust",
+      "incident": "Business partner took money promising to deliver goods, forged documents, and dishonestly misappropriated funds.",
+      "expected_intent": "Cheating",
+      "expected_sections": [
+        "406",
+        "420",
+        "467",
+        "468"
+      ]
+    },
+    {
+      "case_id": "c5_kidnap_assault",
+      "incident": "Victim was forcibly taken in a car, beaten, and threatened with death if she informed police.",
+      "expected_intent": "Kidnapping",
+      "expected_sections": [
+        "365",
+        "323",
+        "506"
+      ]
+    }
+  ],
+  "models_evaluated": [
+    "moonshotai/kimi-k2-instruct",
+    "meta-llama/llama-4-maverick-17b-128e-instruct",
+    "llama-3.3-70b-versatile",
+    "moonshotai/kimi-k2-instruct-0905",
+    "groq/compound-mini",
+    "meta-llama/llama-4-scout-17b-16e-instruct",
+    "groq/compound",
+    "llama-3.1-8b-instant",
+    "allam-2-7b",
+    "qwen/qwen3-32b",
+    "openai/gpt-oss-20b",
+    "openai/gpt-oss-120b",
+    "canopylabs/orpheus-arabic-saudi",
+    "canopylabs/orpheus-v1-english"
+  ],
+  "ranking": [
+    {
+      "model": "moonshotai/kimi-k2-instruct",
+      "tier": "LLM",
+      "intent_accuracy": 1.0,
+      "reasoning_section_f1": 0.6833333333333333,
+      "json_parse_rate": 1.0,
+      "avg_latency_sec": 0.3859799799975008,
+      "composite_score": 0.8575
+    },
+    {
+      "model": "meta-llama/llama-4-maverick-17b-128e-instruct",
+      "tier": "SLM",
+      "intent_accuracy": 1.0,
+      "reasoning_section_f1": 0.6511111111111111,
+      "json_parse_rate": 1.0,
+      "avg_latency_sec": 0.17233508001081646,
+      "composite_score": 0.843
+    },
+    {
+      "model": "llama-3.3-70b-versatile",
+      "tier": "LLM",
+      "intent_accuracy": 0.8,
+      "reasoning_section_f1": 0.7980952380952381,
+      "json_parse_rate": 0.9,
+      "avg_latency_sec": 0.13786857002414762,
+      "composite_score": 0.8091428571428572
+    },
+    {
+      "model": "moonshotai/kimi-k2-instruct-0905",
+      "tier": "LLM",
+      "intent_accuracy": 1.0,
+      "reasoning_section_f1": 0.5678210678210678,
+      "json_parse_rate": 1.0,
+      "avg_latency_sec": 0.4038051400100812,
+      "composite_score": 0.8055194805194805
+    },
+    {
+      "model": "groq/compound-mini",
+      "tier": "SLM",
+      "intent_accuracy": 1.0,
+      "reasoning_section_f1": 0.4766666666666667,
+      "json_parse_rate": 1.0,
+      "avg_latency_sec": 1.791516529978253,
+      "composite_score": 0.7645000000000001
+    },
+    {
+      "model": "meta-llama/llama-4-scout-17b-16e-instruct",
+      "tier": "SLM",
+      "intent_accuracy": 0.8,
+      "reasoning_section_f1": 0.6314285714285715,
+      "json_parse_rate": 0.9,
+      "avg_latency_sec": 0.145046059996821,
+      "composite_score": 0.7341428571428571
+    },
+    {
+      "model": "groq/compound",
+      "tier": "LLM",
+      "intent_accuracy": 0.6,
+      "reasoning_section_f1": 0.65,
+      "json_parse_rate": 0.8,
+      "avg_latency_sec": 3.527971119992435,
+      "composite_score": 0.6425000000000001
+    },
+    {
+      "model": "llama-3.1-8b-instant",
+      "tier": "SLM",
+      "intent_accuracy": 0.6,
+      "reasoning_section_f1": 0.4244444444444444,
+      "json_parse_rate": 1.0,
+      "avg_latency_sec": 0.13073537005111574,
+      "composite_score": 0.5609999999999999
+    },
+    {
+      "model": "allam-2-7b",
+      "tier": "SLM",
+      "intent_accuracy": 0.6,
+      "reasoning_section_f1": 0.21161616161616162,
+      "json_parse_rate": 1.0,
+      "avg_latency_sec": 0.12339962001424283,
+      "composite_score": 0.4652272727272727
+    },
+    {
+      "model": "qwen/qwen3-32b",
+      "tier": "LLM",
+      "intent_accuracy": 0.0,
+      "reasoning_section_f1": 0.3188888888888889,
+      "json_parse_rate": 0.0,
+      "avg_latency_sec": 0.3927356399828568,
+      "composite_score": 0.14350000000000002
+    },
+    {
+      "model": "openai/gpt-oss-20b",
+      "tier": "SLM",
+      "intent_accuracy": 0.2,
+      "reasoning_section_f1": 0.0,
+      "json_parse_rate": 0.2,
+      "avg_latency_sec": 0.2428371199639514,
+      "composite_score": 0.11000000000000001
+    },
+    {
+      "model": "openai/gpt-oss-120b",
+      "tier": "LLM",
+      "intent_accuracy": 0.2,
+      "reasoning_section_f1": 0.0,
+      "json_parse_rate": 0.1,
+      "avg_latency_sec": 0.7536014299839735,
+      "composite_score": 0.1
+    },
+    {
+      "model": "canopylabs/orpheus-arabic-saudi",
+      "tier": "LLM",
+      "intent_accuracy": 0.0,
+      "reasoning_section_f1": 0.0,
+      "json_parse_rate": 0.0,
+      "avg_latency_sec": 999.0,
+      "composite_score": 0.0
+    },
+    {
+      "model": "canopylabs/orpheus-v1-english",
+      "tier": "LLM",
+      "intent_accuracy": 0.0,
+      "reasoning_section_f1": 0.0,
+      "json_parse_rate": 0.0,
+      "avg_latency_sec": 999.0,
+      "composite_score": 0.0
+    }
+  ],
+  "best_slm": {
+    "model": "meta-llama/llama-4-maverick-17b-128e-instruct",
+    "tier": "SLM",
+    "intent_accuracy": 1.0,
+    "reasoning_section_f1": 0.6511111111111111,
+    "json_parse_rate": 1.0,
+    "avg_latency_sec": 0.17233508001081646,
+    "composite_score": 0.843
+  },
+  "best_llm": {
+    "model": "moonshotai/kimi-k2-instruct",
+    "tier": "LLM",
+    "intent_accuracy": 1.0,
+    "reasoning_section_f1": 0.6833333333333333,
+    "json_parse_rate": 1.0,
+    "avg_latency_sec": 0.3859799799975008,
+    "composite_score": 0.8575
+  },
+  "metric_definitions": {
+    "intent_accuracy": "correct_primary_intent_predictions / total_cases",
+    "reasoning_section_f1": "Mean per-case F1 over predicted IPC section set vs expected set",
+    "json_parse_rate": "valid_json_outputs / total_model_calls",
+    "composite_score": "0.45*intent_accuracy + 0.45*reasoning_section_f1 + 0.10*json_parse_rate"
+  }
+}

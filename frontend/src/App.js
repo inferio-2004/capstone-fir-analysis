@@ -1,4 +1,5 @@
-import React from 'react';
+import React, { useState, useCallback } from 'react';
+import { Download } from 'lucide-react';
 import './App.css';
 import { useLexIR } from './hooks/useLexIR';
 import Sidebar from './components/Sidebar';
@@ -9,12 +10,44 @@ import ChatInput from './components/ChatInput';
 function App() {
   const {
     connected, currentStage, loading, error,
-    stage1, stage2, chatMessages,
+    fir, stage1, stage2, chatMessages,
     startAnalysis, askQuestion, showCases, resetChat,
   } = useLexIR('ws://localhost:8000/ws');
 
   const hasAnalysis = !!(stage1 || stage2);
   const qaReady = currentStage >= 3;
+
+  /* ---- PDF download ---- */
+  const [pdfLoading, setPdfLoading] = useState(false);
+
+  const handleDownloadPDF = useCallback(async () => {
+    setPdfLoading(true);
+    try {
+      const res = await fetch('http://localhost:8000/api/fir/pdf', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          fir: fir || {},
+          analysis: stage1?._raw_analysis || null,
+        }),
+      });
+      if (!res.ok) throw new Error(`Server error ${res.status}`);
+      const blob = await res.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `FIR_${fir?.fir_id || 'report'}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      window.URL.revokeObjectURL(url);
+    } catch (err) {
+      console.error('PDF download failed:', err);
+      alert('Failed to generate PDF. Is the server running?');
+    } finally {
+      setPdfLoading(false);
+    }
+  }, [fir, stage1]);
 
   return (
     <div className="app-layout">
@@ -35,7 +68,20 @@ function App() {
             {currentStage === 2 && 'Stage 2 — Similar Cases'}
             {currentStage >= 3 && 'Stage 3 — Precedent Q&A'}
           </h2>
-          {error && <span className="top-error">{error}</span>}
+          <div className="top-bar-actions">
+            {stage1 && (
+              <button
+                className="btn btn-pdf-download"
+                onClick={handleDownloadPDF}
+                disabled={pdfLoading}
+                title="Download filled FIR form as PDF"
+              >
+                <Download size={16} />
+                {pdfLoading ? 'Generating…' : 'Download FIR PDF'}
+              </button>
+            )}
+            {error && <span className="top-error">{error}</span>}
+          </div>
         </header>
 
         {/* FIR Form (shown when no analysis yet) */}

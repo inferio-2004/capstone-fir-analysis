@@ -68,3 +68,6 @@ desktop.ini
 *.tmp
 *.bak
 *.cache
+
+#any pdfs
+*.pdf

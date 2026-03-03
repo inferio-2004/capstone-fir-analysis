@@ -1,0 +1,67 @@
+[
+  {
+    "case_id": "c1_armed_robbery",
+    "complainant": "Rajesh Kumar",
+    "accused": "Amit Singh, Vikram Patel",
+    "victim": "Priya Sharma",
+    "incident": "On 2024-01-09 at approximately 11:30 PM, the victim was returning home from her office when she was approached by two armed men. They forcefully grabbed her, threatened her with a knife, and stole her mobile phone and gold jewelry worth approximately Rs. 50,000. The victim suffered multiple cuts and bruises. The perpetrators fled the scene on a motorcycle.",
+    "victim_impact": "Victim suffered physical injuries including multiple cuts and contusions on arms and face. Psychological trauma and fear. Loss of valuables. Unable to work for 3 days.",
+    "evidence": "CCTV footage showing incident clearly. Medical report documenting injuries. FIR witness: street vendor present at scene. Torn dupatta found at scene.",
+    "statute_context": "[IPC 356] Whoever assaults or uses criminal force to any person, in attempting to commit theft of any property which that person is then wearing or carrying, shall be punished with imprisonment up to two years, or with fine, or both.\n[IPC 390] In all robbery there is either theft or extortion. When theft is robbery: theft is robbery if the offender causes or attempts to cause death, hurt, or wrongful restraint.\n[IPC 394] If any person, in committing or attempting to commit robbery, voluntarily causes hurt, such person and any other person jointly concerned shall be punished with imprisonment for life, or with rigorous imprisonment for a term which may extend to ten years, and shall also be liable to fine.\n[IPC 324] Whoever voluntarily causes hurt by means of any instrument for shooting, stabbing or cutting, or any instrument which, used as a weapon of offence, is likely to cause death, shall be punished.",
+    "gold_primary_intent": "Robbery",
+    "gold_intent_text": "Primary intent: Robbery. Confidence: 0.95. Secondary intents: Assault, Theft.",
+    "gold_reasoning_text": "Applicable statutes: IPC Section 356 — Assault or criminal force in attempt to commit theft of property carried by a person — The accused used criminal force while attempting to steal the victim's belongings. IPC Section 390 — Robbery — The accused committed theft accompanied by force and threat of force using a knife, meeting the statutory definition of robbery. IPC Section 394 — Voluntarily causing hurt in committing robbery — The victim sustained cuts and bruises during the robbery, invoking the aggravated provision. IPC Section 324 — Voluntarily causing hurt by dangerous weapon — A knife was used causing cuts, satisfying the weapon element. Legal basis: The facts demonstrate theft accompanied by criminal force, use of a dangerous weapon, and resulting physical injury, constituting robbery with hurt under IPC. Severity assessment: high. Confidence: 0.93."
+  },
+  {
+    "case_id": "c2_house_theft",
+    "complainant": "Meera Devi",
+    "accused": "Unknown",
+    "victim": "Meera Devi",
+    "incident": "On 2024-02-15 between 10:00 AM and 4:00 PM, while the complainant was away at work, an unknown person broke the lock of the main door and entered the locked house. Cash of Rs. 80,000, gold ornaments, and a laptop were stolen. No one was present in the house at the time.",
+    "victim_impact": "Loss of cash Rs. 80,000, gold ornaments valued at Rs. 2,00,000, and laptop worth Rs. 60,000. Emotional distress and feeling of insecurity.",
+    "evidence": "Broken lock recovered from scene. Neighbor's CCTV showing a suspicious person near the house at 1:15 PM. Fingerprints lifted from almirah.",
+    "statute_context": "[IPC 380] Whoever commits theft in any building, tent, or vessel used as a human dwelling or for the custody of property, shall be punished with imprisonment which may extend to seven years, and shall also be liable to fine.\n[IPC 454] Whoever commits lurking house-trespass or house-breaking in order to commit any offence punishable with imprisonment, shall be punished with imprisonment which may extend to three years, and shall also be liable to fine.\n[IPC 457] Whoever commits lurking house-trespass by night, or house-breaking by night, in order to commit any offence punishable with imprisonment, shall be punished with imprisonment which may extend to five years.",
+    "gold_primary_intent": "Theft",
+    "gold_intent_text": "Primary intent: Theft. Confidence: 0.93. Secondary intents: Trespass, Burglary.",
+    "gold_reasoning_text": "Applicable statutes: IPC Section 380 — Theft in dwelling house — The theft occurred in a residential building used as human dwelling, meeting the elements of theft in a dwelling house. IPC Section 454 — Lurking house-trespass or house-breaking to commit offence — The accused broke the lock and entered the house to commit theft, constituting house-breaking. IPC Section 457 — Lurking house-trespass by night or house-breaking by night — The break-in occurred during daytime; however this section may apply if evidence shows nighttime entry. Legal basis: The accused broke into a locked residential dwelling and committed theft of valuables, satisfying the elements of theft in dwelling under IPC 380 and house-breaking under IPC 454. Severity assessment: medium. Confidence: 0.90."
+  },
+  {
+    "case_id": "c3_dowry_cruelty",
+    "complainant": "Anita Kumari",
+    "accused": "Rakesh Gupta, Sunita Gupta, Mahesh Gupta",
+    "victim": "Anita Kumari",
+    "incident": "Since marriage in 2023, the husband Rakesh Gupta and in-laws Sunita Gupta and Mahesh Gupta have been demanding Rs. 10,00,000 as additional dowry. The victim has been subjected to daily verbal abuse, physical beating, deprivation of food, and threats of being thrown out. On 2024-03-01, the husband slapped and kicked the victim and threatened to kill her if dowry is not paid within one month.",
+    "victim_impact": "Physical injuries from repeated beatings. Severe mental trauma and depression. Malnutrition from deprivation of food. Fear for life due to death threats.",
+    "evidence": "Medical reports showing injuries on multiple dates. WhatsApp messages from husband demanding money. Testimony of neighbor who heard screaming. Victim's parents confirming dowry demand.",
+    "statute_context": "[IPC 498A] Whoever, being the husband or the relative of the husband of a woman, subjects such woman to cruelty shall be punished with imprisonment for a term which may extend to three years and shall also be liable to fine. Cruelty means any wilful conduct likely to drive the woman to commit suicide or cause grave injury, or harassment with a view to coercing her or any related person to meet any unlawful demand for property.\n[IPC 506] Whoever commits the offence of criminal intimidation shall be punished with imprisonment which may extend to two years, or with fine, or both; if threat be to cause death or grievous hurt — imprisonment up to seven years.\n[IPC 34] When a criminal act is done by several persons in furtherance of the common intention of all, each of such persons is liable for that act in the same manner as if it were done by him alone.",
+    "gold_primary_intent": "Cruelty",
+    "gold_intent_text": "Primary intent: Cruelty. Confidence: 0.96. Secondary intents: Dowry Harassment, Criminal Intimidation.",
+    "gold_reasoning_text": "Applicable statutes: IPC Section 498A — Cruelty by husband or relatives of husband — The husband and in-laws subjected the wife to physical and mental cruelty including beating, deprivation of food, and dowry demands, satisfying all elements of Section 498A. IPC Section 506 — Criminal intimidation — The husband threatened to kill the victim if dowry was not paid, constituting criminal intimidation with threat of death. IPC Section 34 — Acts done by several persons in furtherance of common intention — All three accused acted together in demanding dowry and perpetrating cruelty, establishing common intention. Legal basis: The sustained pattern of physical abuse, mental cruelty, dowry demands, and death threats by the husband and in-laws constitutes cruelty under IPC 498A, aggravated by criminal intimidation under 506. Severity assessment: high. Confidence: 0.95."
+  },
+  {
+    "case_id": "c4_cheating_fraud",
+    "complainant": "Suresh Mehta",
+    "accused": "Dinesh Agarwal",
+    "victim": "Suresh Mehta",
+    "incident": "The accused Dinesh Agarwal, who was a business partner of the complainant, collected Rs. 25,00,000 from the complainant promising to deliver goods. The accused forged invoices and delivery receipts to show goods were dispatched. Investigation revealed no goods were ever procured. The accused dishonestly misappropriated the entire amount.",
+    "victim_impact": "Financial loss of Rs. 25,00,000. Business operations disrupted. Reputation damage with downstream clients due to non-delivery of goods.",
+    "evidence": "Forged invoices recovered. Bank transaction records showing fund transfer. Warehouse inspection confirming no goods stored. Forensic analysis of forged signatures.",
+    "statute_context": "[IPC 420] Whoever cheats and thereby dishonestly induces the person deceived to deliver any property, shall be punished with imprisonment which may extend to seven years, and shall also be liable to fine.\n[IPC 406] Whoever commits criminal breach of trust shall be punished with imprisonment which may extend to three years, or with fine, or both.\n[IPC 467] Whoever forges a document which purports to be a valuable security or a will, shall be punished with imprisonment for life or imprisonment up to ten years, and shall also be liable to fine.\n[IPC 468] Whoever commits forgery intending that the document forged shall be used for the purpose of cheating, shall be punished with imprisonment which may extend to seven years, and shall also be liable to fine.",
+    "gold_primary_intent": "Cheating",
+    "gold_intent_text": "Primary intent: Cheating. Confidence: 0.94. Secondary intents: Fraud, Forgery, Criminal Breach of Trust.",
+    "gold_reasoning_text": "Applicable statutes: IPC Section 420 — Cheating and dishonestly inducing delivery of property — The accused cheated the complainant by falsely promising delivery of goods and induced delivery of Rs. 25 lakhs. IPC Section 406 — Criminal breach of trust — The accused was entrusted with funds for a specific purpose and dishonestly misappropriated the entire amount. IPC Section 467 — Forgery of valuable security — The accused forged invoices and delivery receipts which constitute commercial documents. IPC Section 468 — Forgery for purpose of cheating — The forged documents were created specifically to deceive the complainant into believing goods were dispatched. Legal basis: The accused cheated the complainant through false promises, misappropriated entrusted funds, and created forged documents to conceal the fraud, constituting offences under IPC 420, 406, 467, and 468. Severity assessment: high. Confidence: 0.93."
+  },
+  {
+    "case_id": "c5_kidnap_assault",
+    "complainant": "Kavita Singh",
+    "accused": "Ravi Yadav, Sunil Yadav",
+    "victim": "Kavita Singh",
+    "incident": "On 2024-04-20 at around 8:00 PM, the victim was walking near her residence when two men (Ravi Yadav and Sunil Yadav) forcibly pulled her into a car. She was taken to an isolated location where she was beaten with fists and a rod. The accused threatened to kill her if she informed the police. She was released after 6 hours.",
+    "victim_impact": "Multiple injuries including bruises, swelling on arms and back. Severe psychological trauma and fear. Unable to leave home unaccompanied.",
+    "evidence": "CCTV footage near abduction point showing victim being pulled into car. Medical report documenting injuries. Victim's torn clothing recovered. Victim identified both accused in photo lineup.",
+    "statute_context": "[IPC 365] Whoever kidnaps or abducts any person with intent to cause that person to be secretly and wrongfully confined, shall be punished with imprisonment which may extend to seven years, and shall also be liable to fine.\n[IPC 323] Whoever voluntarily causes hurt shall be punished with imprisonment which may extend to one year, or with fine which may extend to one thousand rupees, or with both.\n[IPC 506] Whoever commits the offence of criminal intimidation shall be punished with imprisonment which may extend to two years, or with fine, or both; if threat be to cause death or grievous hurt — up to seven years.",
+    "gold_primary_intent": "Kidnapping",
+    "gold_intent_text": "Primary intent: Kidnapping. Confidence: 0.94. Secondary intents: Assault, Criminal Intimidation.",
+    "gold_reasoning_text": "Applicable statutes: IPC Section 365 — Kidnapping or abducting with intent to secretly and wrongfully confine — The accused forcibly abducted the victim and confined her at an isolated location for 6 hours. IPC Section 323 — Voluntarily causing hurt — The accused beat the victim with fists and a rod causing injuries, constituting voluntarily causing hurt. IPC Section 506 — Criminal intimidation — The accused threatened to kill the victim if she informed police, constituting criminal intimidation with threat of death. Legal basis: The forcible abduction, unlawful confinement, physical assault, and death threats by the accused constitute kidnapping, hurt, and criminal intimidation under IPC. Severity assessment: high. Confidence: 0.94."
+  }
+]

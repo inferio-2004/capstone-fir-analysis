@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import {
   Scale, ExternalLink, ChevronDown, ChevronUp, Search,
-  Gavel, ShieldAlert, AlertTriangle, CheckCircle2,
+  Gavel, ShieldAlert, AlertTriangle, CheckCircle2, TrendingUp,
 } from 'lucide-react';
 
 export default function Stage2Card({ data }) {
@@ -9,7 +9,8 @@ export default function Stage2Card({ data }) {
 
   if (!data) return null;
 
-  const { status, sections_searched, cases, verdict_prediction, api_calls_used, error } = data;
+  const { status, sections_searched, cases, verdict_prediction,
+          section_influence, api_calls_used, error } = data;
 
   /* ---------- error state ---------- */
   if (status === 'error') {
@@ -136,6 +137,52 @@ export default function Stage2Card({ data }) {
                   <strong>Reasoning:</strong> {vp.reasoning}
                 </div>
               )}
+            </div>
+          )}
+
+          {/* ============ SECTION INFLUENCE ON VERDICT ============ */}
+          {section_influence?.length > 0 && (
+            <div className="influence-card">
+              <div className="influence-header">
+                <TrendingUp size={18} />
+                <h4>Section Influence on Verdict</h4>
+              </div>
+              <p className="influence-subtitle">
+                Which sections are most likely to determine the outcome
+              </p>
+              <div className="influence-list">
+                {section_influence.filter(s => s.influence_score > 0).map((s, i) => {
+                  const barColor =
+                    s.influence_score >= 75 ? '#ef4444' :
+                    s.influence_score >= 50 ? '#f59e0b' :
+                    s.influence_score >= 25 ? '#6366f1' : '#94a3b8';
+                  const levelBadge =
+                    s.influence_level === 'Primary' ? 'influence-badge-primary' :
+                    s.influence_level === 'Supporting' ? 'influence-badge-supporting' :
+                    'influence-badge-minor';
+                  return (
+                    <div key={i} className="influence-item">
+                      <div className="influence-item-top">
+                        <span className="influence-rank">#{i + 1}</span>
+                        <span className="influence-section">{s.section}</span>
+                        <span className={`influence-level-badge ${levelBadge}`}>
+                          {s.influence_level}
+                        </span>
+                        <span className="influence-pct">{s.influence_score}%</span>
+                      </div>
+                      <div className="influence-bar-track">
+                        <div
+                          className="influence-bar-fill"
+                          style={{ width: `${s.influence_score}%`, background: barColor }}
+                        />
+                      </div>
+                      {s.reasoning && (
+                        <p className="influence-reasoning">{s.reasoning}</p>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
             </div>
           )}
 

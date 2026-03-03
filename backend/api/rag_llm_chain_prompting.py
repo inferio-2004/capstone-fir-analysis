@@ -22,13 +22,13 @@ class StatuteRAGChainSystem:
         
         # Initialize Groq LLMs for different stages
         self.llm_intent = ChatGroq(
-            model="llama-3.1-8b-instant",
+            model="meta-llama/llama-4-scout-17b-16e-instruct",
             temperature=0.3,
             api_key=os.environ.get('GROQ_API_KEY')
         )
         
         self.llm_reasoning = ChatGroq(
-            model="openai/gpt-oss-120b",
+            model="moonshotai/kimi-k2-instruct-0905",
             temperature=0.4,
             api_key=os.environ.get('GROQ_API_KEY')
         )
@@ -628,8 +628,8 @@ def main():
         print(f"[Chunks After Filtering] {result['retrieved_data']['chunks_after_filtering']}")
         
         print(f"\n[Chain Prompting Stages] {result['chain_prompting_stages']}")
-        print("  Stage 1: Intent Identification (llama-3.1-8b-instant)")
-        print("  Stage 2: Legal Reasoning (gpt-oss-120b) [using Stage 1 output]")
+        print("  Stage 1: Intent Identification (llama-4-scout-17b)")
+        print("  Stage 2: Legal Reasoning (kimi-k2-instruct-0905) [using Stage 1 output]")
         
         print("\n" + "="*80)
         print("✓ CHAIN PROMPTING ANALYSIS COMPLETE")

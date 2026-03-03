@@ -20,6 +20,7 @@ from typing import Optional
 import requests
 from groq import Groq
 from dotenv import load_dotenv
+from model_config import get_preferred_groq_model
 
 load_dotenv()
 
@@ -34,7 +35,7 @@ CACHE_DIR = REPO_ROOT / "output" / "kanoon_cache"
 
 MAX_PER_SECTION = 2       # cases per IPC section
 MAX_TOTAL_CASES = 5       # total cases to fetch & summarize
-GROQ_MODEL = "llama-3.1-8b-instant"
+GROQ_MODEL = get_preferred_groq_model("llama-3.1-8b-instant")
 
 
 # ---------------------------------------------------------------------------
@@ -232,6 +233,92 @@ Provide your prediction in this exact JSON format (no markdown, no code fences):
         }
 
 
+def rank_section_influence(
+    mapped_sections: list[str],
+    fir_summary: str,
+    verdict: dict,
+    case_summaries: list[dict],
+) -> list[dict]:
+    """Rank each applicable section by how much it is likely to influence the verdict.
+
+    Returns a list of dicts sorted by influence_score (highest first):
+      { section, law, influence_score (0-100), influence_level, reasoning }
+    """
+    if not mapped_sections:
+        return []
+
+    sections_str = ", ".join(mapped_sections)
+    cases_ctx = ""
+    for i, cs in enumerate(case_summaries[:5], 1):
+        cases_ctx += f"\n[Case {i}] {cs.get('title','')} (Section {cs.get('section','')})\n  Summary: {cs.get('summary','')}\n"
+
+    verdict_str = json.dumps(verdict, indent=2) if verdict else "No verdict prediction available"
+
+    prompt = f"""You are a senior Indian criminal law analyst. Given the FIR details, the 
+applicable sections, real court precedents, and the predicted verdict below, 
+rank EACH applicable section by how strongly it influences the verdict outcome.
+
+FIR DETAILS:
+{fir_summary}
+
+APPLICABLE SECTIONS: {sections_str}
+
+PRECEDENT CASES:
+{cases_ctx}
+
+PREDICTED VERDICT:
+{verdict_str}
+
+For EACH section listed in APPLICABLE SECTIONS, provide:
+- influence_score: 0-100 (100 = most influential on the final verdict)
+- influence_level: "Primary" / "Supporting" / "Minor"
+- reasoning: 1-2 sentences explaining why this section carries that level of influence
+
+Return ONLY valid JSON array (no markdown, no code fences):
+[
+  {{
+    "section": "IPC 394",
+    "influence_score": 90,
+    "influence_level": "Primary",
+    "reasoning": "This section carries the heaviest punishment and is the main charge."
+  }}
+]"""
+
+    try:
+        resp = _get_groq().chat.completions.create(
+            model=GROQ_MODEL,
+            messages=[
+                {"role": "system", "content": "You are a senior Indian criminal law expert. Return ONLY valid JSON array, no markdown."},
+                {"role": "user", "content": prompt},
+            ],
+            temperature=0.3,
+            max_tokens=800,
+        )
+        raw = resp.choices[0].message.content.strip()
+        raw = re.sub(r"^```(?:json)?\s*", "", raw)
+        raw = re.sub(r"\s*```$", "", raw)
+        rankings = json.loads(raw)
+
+        # Normalise and sort
+        for r in rankings:
+            r["influence_score"] = max(0, min(100, int(r.get("influence_score", 0))))
+        rankings.sort(key=lambda r: r["influence_score"], reverse=True)
+        return rankings
+    except Exception as e:
+        print(f"[Kanoon] Section influence ranking error: {e}")
+        # Fallback: equal weight for every section
+        n = len(mapped_sections)
+        return [
+            {
+                "section": s,
+                "influence_score": round(100 / n),
+                "influence_level": "Unknown",
+                "reasoning": "Could not compute influence — LLM call failed.",
+            }
+            for s in mapped_sections
+        ]
+
+
 def _build_fact_query(fir_summary: str, ipc_sections: list[str]) -> str:
     """Use Groq LLM to distill FIR facts into an optimal Indian Kanoon search query."""
     if not fir_summary or not GROQ_API_KEY:
@@ -322,12 +409,23 @@ def search_and_analyze(
     3. Summarize each case with Groq LLM
     4. Predict verdict/punishment based on all precedents
     """
+    print("\n" + "="*80)
+    print("INDIAN KANOON API - EXACT INPUTS")
+    print("="*80)
+    print(f"\n[INPUT 1] mapped_sections (from Stage 1):")
+    for i, sec in enumerate(mapped_sections, 1):
+        print(f"  {i}. {sec}")
+    print(f"\n[INPUT 2] fir_summary (first 600 chars):")
+    print(f"  {fir_summary}")
+    print("\n" + "="*80)
+    
     if not KANOON_API_KEY:
         return {"status": "error", "sections_searched": [], "cases": [],
                 "verdict_prediction": None, "api_calls_used": 0,
                 "error": "KANOON_API_KEY is not set in .env"}
 
     ipc_sections = _extract_ipc_sections(mapped_sections)
+    print(f"\n[STEP 1] Extracted IPC sections: {ipc_sections}")
     if not ipc_sections and not fir_summary:
         return {"status": "no_results", "sections_searched": [], "cases": [],
                 "verdict_prediction": None, "api_calls_used": 0, "error": None}
@@ -371,27 +469,31 @@ def search_and_analyze(
     # ---- Strategy 1: LLM-crafted fact+section query (best relevance) ----
     fact_query = _build_fact_query(fir_summary, ipc_sections) if fir_summary else ""
     if fact_query:
-        print(f"[Kanoon] Fact-based search: \"{fact_query}\"")
+        print(f"\n[KANOON SEARCH QUERY 1 - LLM-generated]")
+        print(f"  Query: \"{fact_query}\"")
         result = search_kanoon(fact_query)
         api_calls += 1
         _add_cases_from_result(result, "Fact-match", min(3, max_total))
 
     # ---- Strategy 2: Section + "conviction accused" (targeted per section) ----
-    for sec in ipc_sections:
+    for i, sec in enumerate(ipc_sections, 1):
         if len(all_cases) >= max_total:
             break
         query = f"Section {sec} IPC accused conviction sentence"
-        print(f"[Kanoon] Section search: \"{query}\"")
+        print(f"\n[KANOON SEARCH QUERY {i+1} - Fallback for IPC {sec}]")
+        print(f"  Query: \"{query}\"")
         result = search_kanoon(query)
         api_calls += 1
         _add_cases_from_result(result, f"IPC {sec}", max_per_section)
 
     # ---- Strategy 3: Broader fallback if we still have too few ----
     if len(all_cases) < 2:
+        print(f"\n[KANOON SEARCH - Strategy 3: Broader fallback]")
         for sec in ipc_sections:
             if len(all_cases) >= max_total:
                 break
             query = f"Section {sec} IPC guilty punishment"
+            print(f"  Query: \"{query}\"")
             result = search_kanoon(query)
             api_calls += 1
             _add_cases_from_result(result, f"IPC {sec}", max_per_section)
@@ -426,11 +528,21 @@ def search_and_analyze(
         case_summaries=cases_with_summaries or all_cases,
     )
 
+    # ---- Step 4: Rank section influence on verdict ----
+    print("[Kanoon] Ranking section influence on verdict...")
+    section_influence = rank_section_influence(
+        mapped_sections=mapped_sections,
+        fir_summary=fir_summary,
+        verdict=verdict,
+        case_summaries=cases_with_summaries or all_cases,
+    )
+
     return {
         "status": "success" if cases_with_summaries else "partial",
         "sections_searched": [f"IPC {s}" for s in ipc_sections],
         "cases": all_cases,
         "verdict_prediction": verdict,
+        "section_influence": section_influence,
         "api_calls_used": api_calls,
         "error": None,
     }

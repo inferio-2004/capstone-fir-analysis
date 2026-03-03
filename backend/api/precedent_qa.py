@@ -10,6 +10,7 @@ import os
 import textwrap
 from groq import Groq
 from dotenv import load_dotenv
+from model_config import get_preferred_groq_model
 
 load_dotenv()
 
@@ -27,7 +28,8 @@ Rules:
 class PrecedentQA:
     """Synthesize answers from retrieved legal QA precedents using Groq LLM."""
 
-    def __init__(self, model: str = "llama-3.1-8b-instant"):
+    def __init__(self, model: str | None = None):
+        model = model or get_preferred_groq_model("llama-3.1-8b-instant")
         self.client = Groq(api_key=os.environ.get("GROQ_API_KEY"))
         self.model = model
         print(f"[PrecedentQA] Groq LLM ready ({model})")
