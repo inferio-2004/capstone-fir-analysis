@@ -8,9 +8,44 @@ Uses fpdf2 (pure-Python, no external binaries needed).
 from __future__ import annotations
 
 import io
+import re
 from pathlib import Path
 
 from fpdf import FPDF
+
+
+# ---------------------------------------------------------------------------
+#  Unicode → Latin-1 sanitiser  (PyFPDF only supports Latin-1)
+# ---------------------------------------------------------------------------
+_UNICODE_MAP = {
+    '\u2018': "'", '\u2019': "'",   # curly single quotes
+    '\u201c': '"', '\u201d': '"',   # curly double quotes
+    '\u2013': '-', '\u2014': '--',  # en-dash, em-dash
+    '\u2026': '...',                 # ellipsis
+    '\u2010': '-', '\u2011': '-',   # hyphens
+    '\u2012': '-', '\u2015': '--',  # figure dash, horizontal bar
+    '\u20b9': 'Rs.',                 # ₹ Indian Rupee
+    '\u20ac': 'EUR',                 # €
+    '\u00a3': 'GBP',                 # £ (actually in Latin-1, but just in case)
+    '\u2022': '*',                   # bullet
+    '\u2713': '[Y]',                 # ✓ check mark
+    '\u2717': '[X]',                 # ✗ cross mark
+    '\u2714': '[Y]',                 # ✔ heavy check
+    '\u2716': '[X]',                 # ✖ heavy cross
+    '\u00a0': ' ',                   # non-breaking space
+    '\ufeff': '',                    # BOM
+}
+_UNICODE_RE = re.compile('|'.join(re.escape(k) for k in _UNICODE_MAP))
+
+
+def _sanitize_latin1(text: str) -> str:
+    """Replace common Unicode characters with Latin-1 safe equivalents,
+    then drop anything else that still can't be encoded as Latin-1."""
+    if not text:
+        return text
+    text = _UNICODE_RE.sub(lambda m: _UNICODE_MAP[m.group()], text)
+    # Drop remaining non-Latin-1 chars rather than crashing
+    return text.encode('latin-1', errors='replace').decode('latin-1')
 
 
 class FIRPDF(FPDF):
@@ -95,6 +130,9 @@ def generate_fir_pdf(fields: dict) -> bytes:
     bytes
         PDF file content ready to be served or saved.
     """
+    # Sanitise all field values to Latin-1 safe text (PyFPDF limitation)
+    fields = {k: _sanitize_latin1(str(v)) if v else v for k, v in fields.items()}
+
     pdf = FIRPDF()
     pdf.add_page()
 
@@ -307,6 +345,9 @@ def generate_fir_pdf(fields: dict) -> bytes:
     pdf.ln(3)
 
     # ── output ────────────────────────────────────────────────────────────
-    buf = io.BytesIO()
-    pdf.output(buf)
-    return buf.getvalue()
+    # Use dest='S' for compatibility with both fpdf (PyFPDF) and fpdf2.
+    # PyFPDF's .output() does not accept a BytesIO object.
+    pdf_bytes = pdf.output(dest='S')
+    if isinstance(pdf_bytes, str):
+        pdf_bytes = pdf_bytes.encode('latin-1')
+    return bytes(pdf_bytes)
