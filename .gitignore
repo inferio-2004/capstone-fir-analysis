@@ -1,3 +1,15 @@
+# Ignore benchmark and evaluation files
+backend/benchmarks/BENCHMARK_REPORT.md
+backend/benchmarks/benchmark_influence_scoring.py
+backend/benchmarks/benchmark_summarization.py
+backend/benchmarks/influence_scoring_algorithm.py
+backend/benchmarks/results_influence_scoring_v2.json
+backend/benchmarks/results_summarization_baseline.json
+backend/benchmarks/results_summarization_v2.json
+backend/benchmarks/summarization_baseline.py
+backend/benchmarks/summarization_v2.py
+backend/evaluation/results_influence_scoring.json
+backend/evaluation/results_summarization.json
 # Environment Variables (CRITICAL - contains API keys)
 .env
 .env.local
@@ -68,6 +80,9 @@ desktop.ini
 *.tmp
 *.bak
 *.cache
-AGENT_README (1).md
+AGENT_README.md
+AGENT_README_BENCHMARK.md
 #any pdfs
 *.pdf
+
+backend/benchmark/*

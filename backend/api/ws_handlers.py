@@ -18,6 +18,7 @@ from pathlib import Path
 from typing import Callable, Awaitable, Any, Optional
 
 from formatters import format_stage1, extract_mapped_sections
+from groq_prompts import rank_section_influence
 from precedent_qa import answer_question
 
 REPO_ROOT = Path(__file__).resolve().parents[2]

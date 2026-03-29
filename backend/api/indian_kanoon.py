@@ -24,9 +24,11 @@ import os
 
 import re
 
+import time
+
 from collections import Counter
 
-
+import json
 
 import numpy as np
 
@@ -137,7 +139,28 @@ def _tokenize_words(text: str) -> list[str]:
     return re.findall(r"[a-zA-Z0-9]+", text.lower())
 
 
+def preprocess_judgment(text: str) -> str:
+    """Refined preprocessor: Facts, Held, Judgment extraction."""
+    markers = [
+        r"(?i)facts\s+of\s+the\s+case",
+        r"(?i)brief\s+facts",
+        r"(?i)held",
+        r"(?i)conclusion",
+        r"(?i)judgment",
+        r"(?i)order",
+        r"(?i)findings",
+    ]
+    parts = re.split(r"\n\s*(?:\d+\.|\b[A-Z][A-Z\s]+\b)\s*", text)
+    kept = []
+    for part in parts:
+        if any(re.search(marker, part[:100]) for marker in markers):
+            kept.append(part.strip())
 
+    if not kept:
+        if len(text) > 2500:
+            return text[:1500] + "\n... [truncated] ...\n" + text[-1000:]
+        return text
+    return "\n\n".join(kept)[:2500]
 
 
 def summarize_text(text: str) -> str:
@@ -303,22 +326,34 @@ def search_kanoon(query: str, page: int = 0) -> dict:
         return cached
 
     try:
-
-        resp = requests.post(f"{KANOON_BASE_URL}/search/", headers=_headers(),
-
-                             data={"formInput": query, "pagenum": page}, timeout=15)
+        data_payload = {
+            "formInput": query,
+            "pagenum": page,
+            "doctypes": "judgments",
+            "fromdate": "01-01-2000",
+            "sortby": "mostrecent"
+        }
+        
+        import urllib.parse
+        full_url = f"{KANOON_BASE_URL}/search/?{urllib.parse.urlencode(data_payload)}"
+        print(f"\n[Kanoon API] RAW URL: {full_url}")
+        print(f"  Filter:   doctypes=judgments, fromdate=01-01-2000, sortby=mostrecent")
+        
+        resp = requests.post(f"{KANOON_BASE_URL}/search/", headers=_headers(), data=data_payload, timeout=15)
 
         resp.raise_for_status()
 
         data = resp.json()
+        if data.get("docs"):
+            print(f"\n[Kanoon API] RAW FIRST RESULT JSON:\n{json.dumps(data['docs'][0], indent=2)}")
 
         save_cache(ck, data)
 
         return data
 
-    except requests.exceptions.HTTPError:
+    except requests.exceptions.HTTPError as e:
 
-        return {"error": f"HTTP {resp.status_code}: {resp.text[:200]}", "docs": []}
+        return {"error": f"HTTP {e.response.status_code}: {e.response.text[:200]}", "docs": []}
 
     except requests.exceptions.RequestException as e:
 
@@ -504,7 +539,7 @@ def search_and_analyze(
 
     if fact_query:
 
-        print(f"\n[KANOON SEARCH QUERY 1 - LLM-generated]\n  Query: \"{fact_query}\"")
+        print(f"\n[KANOON SEARCH QUERY 1 - Deterministic]\n  Query: \"{fact_query}\"")
 
         result = search_kanoon(fact_query)
 
@@ -523,8 +558,6 @@ def search_and_analyze(
             break
 
         query = f"Section {sec} IPC accused conviction sentence"
-
-        print(f"\n[KANOON SEARCH QUERY {i + 1}]\n  Query: \"{query}\"")
 
         result = search_kanoon(query)
 
@@ -560,6 +593,31 @@ def search_and_analyze(
 
                 "cases": [], "verdict_prediction": None, "api_calls_used": api_calls, "error": None}
 
+    
+    # --- FILTERING LOGIC ---
+    print(f"\n[Kanoon] Filtering {len(all_cases)} results...")
+    
+    BAD_KEYWORDS = ["Constitution", "TADA", "Transfer", "Article 21", "Article 377", "Special Courts Act"]
+    
+    filtered: list[dict] = []
+    for c in all_cases:
+        # Check Year
+        title = c.get("title", "")
+        m = re.search(r"\b(1\d{3}|2000)\b", title) # Quick check for years < 2000
+        if m and int(m.group(1)) < 2000:
+            continue
+            
+        # Check Keywords
+        if any(kw.lower() in title.lower() for kw in BAD_KEYWORDS):
+            continue
+            
+        filtered.append(c)
+        
+    if len(filtered) >= 3:
+        print(f"✓ Filtered to {len(filtered)} cases.")
+        all_cases = filtered
+    else:
+        print(f"! Filtering left only {len(filtered)} cases. Reverting to raw results.")
 
 
     # Fetch judgment text + summarise
@@ -584,7 +642,9 @@ def search_and_analyze(
 
         doc_text = _clean_html(doc_data.get("doc", "")) or case["snippet"]
 
-        case["summary"] = summarize_case_with_llm(doc_text[:3500])
+        prepped_text = preprocess_judgment(doc_text)
+
+        case["summary"] = summarize_case_with_llm(prepped_text)
 
 
 
@@ -709,6 +769,5 @@ if __name__ == "__main__":
         print(f"  Verdict:    {vp.get('predicted_verdict', 'N/A')}")
 
         print(f"  Punishment: {vp.get('predicted_punishment', 'N/A')}")
-
 
 
