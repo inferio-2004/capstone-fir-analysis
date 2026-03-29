@@ -1,0 +1,222 @@
+[
+  {
+    "chunk_id": 0,
+    "literal": false,
+    "semantic": true,
+    "semantic_score": 0.6758813858032227,
+    "offence": "Theft",
+    "literal_time": 2.759997732937336e-05,
+    "semantic_time": 0.00829389994032681,
+    "expected": true,
+    "text": "The accused took the property with the owner's full permission."
+  },
+  {
+    "chunk_id": 1,
+    "literal": false,
+    "semantic": true,
+    "semantic_score": 0.6534920930862427,
+    "offence": "Hurt",
+    "literal_time": 2.8999987989664078e-05,
+    "semantic_time": 0.008727899985387921,
+    "expected": true,
+    "text": "The injury was caused accidentally when the complainant slipped."
+  },
+  {
+    "chunk_id": 2,
+    "literal": false,
+    "semantic": true,
+    "semantic_score": 0.6303827166557312,
+    "offence": "Extortion",
+    "literal_time": 2.629996743053198e-05,
+    "semantic_time": 0.007372700027190149,
+    "expected": true,
+    "text": "The payment demanded was part of a legitimate debt recovery process."
+  },
+  {
+    "chunk_id": 3,
+    "literal": false,
+    "semantic": true,
+    "semantic_score": 0.5572885870933533,
+    "offence": "Cheating",
+    "literal_time": 2.4700071662664413e-05,
+    "semantic_time": 0.007582099991850555,
+    "expected": true,
+    "text": "Both parties entered the agreement with complete knowledge and consent."
+  },
+  {
+    "chunk_id": 4,
+    "literal": false,
+    "semantic": true,
+    "semantic_score": 0.5829020738601685,
+    "offence": "Dacoity",
+    "literal_time": 2.8999987989664078e-05,
+    "semantic_time": 0.007551899994723499,
+    "expected": true,
+    "text": "The group of five had no shared intention to rob anyone."
+  },
+  {
+    "chunk_id": 5,
+    "literal": false,
+    "semantic": true,
+    "semantic_score": 0.7517980933189392,
+    "offence": "Hurt",
+    "literal_time": 2.9999995604157448e-05,
+    "semantic_time": 0.007824700092896819,
+    "expected": true,
+    "text": "The physical contact occurred during a sports match with mutual consent."
+  },
+  {
+    "chunk_id": 6,
+    "literal": false,
+    "semantic": false,
+    "semantic_score": 0.5219390392303467,
+    "offence": "Criminal Breach of Trust",
+    "literal_time": 2.989999484270811e-05,
+    "semantic_time": 0.008227900019846857,
+    "expected": true,
+    "text": "The accused used the entrusted funds exactly as authorized."
+  },
+  {
+    "chunk_id": 7,
+    "literal": false,
+    "semantic": true,
+    "semantic_score": 0.7350565195083618,
+    "offence": "Criminal Intimidation",
+    "literal_time": 3.120000474154949e-05,
+    "semantic_time": 0.00810900004580617,
+    "expected": true,
+    "text": "The statement was a general remark not directed at any specific person."
+  },
+  {
+    "chunk_id": 8,
+    "literal": false,
+    "semantic": true,
+    "semantic_score": 0.6918789744377136,
+    "offence": "Theft",
+    "literal_time": 2.41999514400959e-05,
+    "semantic_time": 0.006709599983878434,
+    "expected": true,
+    "text": "The accused believed he had a legal right to reclaim the property."
+  },
+  {
+    "chunk_id": 9,
+    "literal": false,
+    "semantic": false,
+    "semantic_score": 0.464644193649292,
+    "offence": "Wrongful Confinement",
+    "literal_time": 2.2399937734007835e-05,
+    "semantic_time": 0.007505599991418421,
+    "expected": true,
+    "text": "The restraint was carried out under a valid court order."
+  },
+  {
+    "chunk_id": 10,
+    "literal": false,
+    "semantic": false,
+    "semantic_score": 0.35850876569747925,
+    "offence": "Theft",
+    "literal_time": 2.5099958293139935e-05,
+    "semantic_time": 0.008465700084343553,
+    "expected": false,
+    "text": "The accused forcibly entered the house at night and took gold jewelry without the owner's knowledge."
+  },
+  {
+    "chunk_id": 11,
+    "literal": false,
+    "semantic": false,
+    "semantic_score": 0.3605831265449524,
+    "offence": "Extortion",
+    "literal_time": 2.95999925583601e-05,
+    "semantic_time": 0.007973800064064562,
+    "expected": false,
+    "text": "The accused threatened to kill the complainant unless he handed over cash."
+  },
+  {
+    "chunk_id": 12,
+    "literal": false,
+    "semantic": false,
+    "semantic_score": 0.5184135437011719,
+    "offence": "Grievous Hurt",
+    "literal_time": 2.320006024092436e-05,
+    "semantic_time": 0.0069003000389784575,
+    "expected": false,
+    "text": "The victim sustained a fractured arm after being struck with an iron rod."
+  },
+  {
+    "chunk_id": 13,
+    "literal": false,
+    "semantic": false,
+    "semantic_score": 0.5198416113853455,
+    "offence": "Cheating",
+    "literal_time": 2.4000066332519054e-05,
+    "semantic_time": 0.00801839993800968,
+    "expected": false,
+    "text": "The accused deliberately misrepresented the property documents to induce the complainant to transfer money."
+  },
+  {
+    "chunk_id": 14,
+    "literal": false,
+    "semantic": true,
+    "semantic_score": 0.5370296239852905,
+    "offence": "Dacoity",
+    "literal_time": 2.9699993319809437e-05,
+    "semantic_time": 0.008084299974143505,
+    "expected": false,
+    "text": "Five persons surrounded the complainant and forcibly snatched his bag."
+  },
+  {
+    "chunk_id": 15,
+    "literal": false,
+    "semantic": false,
+    "semantic_score": 0.2811768651008606,
+    "offence": "Wrongful Confinement",
+    "literal_time": 3.0800001695752144e-05,
+    "semantic_time": 0.008135899901390076,
+    "expected": false,
+    "text": "The accused confined the complainant in a locked room against his will for three days."
+  },
+  {
+    "chunk_id": 16,
+    "literal": false,
+    "semantic": false,
+    "semantic_score": 0.3924202620983124,
+    "offence": "Criminal Intimidation",
+    "literal_time": 2.280005719512701e-05,
+    "semantic_time": 0.006743600009940565,
+    "expected": false,
+    "text": "The accused sent repeated messages threatening to harm the complainant's family."
+  },
+  {
+    "chunk_id": 17,
+    "literal": false,
+    "semantic": false,
+    "semantic_score": 0.41979843378067017,
+    "offence": "Criminal Breach of Trust",
+    "literal_time": 2.3300061002373695e-05,
+    "semantic_time": 0.006894199992530048,
+    "expected": false,
+    "text": "The accused diverted funds entrusted to him for construction into his personal account."
+  },
+  {
+    "chunk_id": 18,
+    "literal": false,
+    "semantic": false,
+    "semantic_score": 0.4288867115974426,
+    "offence": "Hurt",
+    "literal_time": 2.320006024092436e-05,
+    "semantic_time": 0.006482600001618266,
+    "expected": false,
+    "text": "The accused intentionally struck the complainant on the head causing unconsciousness."
+  },
+  {
+    "chunk_id": 19,
+    "literal": false,
+    "semantic": false,
+    "semantic_score": 0.39396628737449646,
+    "offence": "Kidnapping",
+    "literal_time": 2.3099943064153194e-05,
+    "semantic_time": 0.006519300048239529,
+    "expected": false,
+    "text": "The accused lured the minor away from school premises without parental consent."
+  }
+]

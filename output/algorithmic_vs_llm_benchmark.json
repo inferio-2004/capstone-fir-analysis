@@ -1,0 +1,355 @@
+{
+  "benchmark": "Algorithmic vs LLM — Quality & Speed",
+  "summarisation_2d": {
+    "aggregate": {
+      "num_cases": 5,
+      "llm_avg_recall": 0.85,
+      "algo_avg_recall": 0.7,
+      "llm_avg_density": 1.2762,
+      "algo_avg_density": 1.0,
+      "llm_avg_time_s": 0.525,
+      "algo_avg_time_s": 0.0,
+      "llm_avg_length": 718,
+      "algo_avg_length": 700,
+      "speedup_x": 5250.0,
+      "recall_diff": -0.15
+    },
+    "per_case": [
+      {
+        "case": "Chauthi Yadav vs State Of U.P. on 16 September, 2015",
+        "llm_recall": 1.0,
+        "algo_recall": 1.0,
+        "llm_density": 1.3245,
+        "algo_density": 1.4286,
+        "llm_time_s": 0.746,
+        "algo_time_s": 0.0,
+        "llm_summary_preview": "The case of Chauthi Yadav vs State Of U.P. (2015) involved a dispute over a path, nand, and khunta, which led to a physical altercation between the informant, Teju Yadav, and the accused, Chauthi Yada",
+        "algo_summary_preview": "500/- each, for the offence punishable under Section 304(1)/34 IPC for ten years rigorous imprisonment to all the appellants and a fine of Rs. 5000/- each, for the offence punishable under Section 504"
+      },
+      {
+        "case": "State Of Rajasthan vs Fakre Aalam @ Khacchu on 30 July, 2019",
+        "llm_recall": 1.0,
+        "algo_recall": 0.75,
+        "llm_density": 1.7544,
+        "algo_density": 1.0714,
+        "llm_time_s": 0.404,
+        "algo_time_s": 0.0,
+        "llm_summary_preview": "Here's a concise summary of the Indian court judgment:\n\nThe case involved Fakre Aalam @ Khacchu, who was accused of murdering Mohammad Kasam in a liquor shop in Kota, Rajasthan. The prosecution charge",
+        "algo_summary_preview": "Accused-Fakre Aalam @ Khacchu had faced trial in FIR No.73\n\ndated 30.04.2014 registered at Police Station Makbara, District\n\nKota City under Sections 323, 327 and 307 of Indian Penal Code,\n\n\n         "
+      },
+      {
+        "case": "Shatrughan Chauhan & Anr vs Union Of India & Ors on 21 January, 2014",
+        "llm_recall": 0.75,
+        "algo_recall": 0.5,
+        "llm_density": 0.8982,
+        "algo_density": 0.7143,
+        "llm_time_s": 0.486,
+        "algo_time_s": 0.0,
+        "llm_summary_preview": "Here's a concise summary of the Indian court judgment:\n\nThe case, Shatrughan Chauhan & Anr vs Union Of India & Ors, was about the constitutional validity of executing death sentences despite the rejec",
+        "algo_summary_preview": "Like  the  death\nsentence is passed lawfully, the execution of the sentence must also  be  in\nconsonance with the Constitutional mandate  and  not  in  violation  of  the\nconstitutional principles. 26"
+      },
+      {
+        "case": "Vijay Madanlal Choudhary vs Union Of India on 27 July, 2022",
+        "llm_recall": 0.5,
+        "algo_recall": 0.25,
+        "llm_density": 0.5656,
+        "algo_density": 0.3571,
+        "llm_time_s": 0.527,
+        "algo_time_s": 0.0,
+        "llm_summary_preview": "Here is a concise summary of the judgment:\n\nThe case, Vijay Madanlal Choudhary vs Union Of India, was about the constitutional validity of Section 66A of the Information Technology Act, 2000, which de",
+        "algo_summary_preview": "4078/2018, 8111/2019 and 6172/2020\nTransferred Case (Crl.) No. In these cases, the challenge is regarding the validity and\n\ninterpretation of other statutes (other than 2002 Act), such as Indian\n\nPena"
+      },
+      {
+        "case": "Shatrughna Baban Meshram vs The State Of Maharashtra on 2 November, 2020",
+        "llm_recall": 1.0,
+        "algo_recall": 1.0,
+        "llm_density": 1.8382,
+        "algo_density": 1.4286,
+        "llm_time_s": 0.461,
+        "algo_time_s": 0.0,
+        "llm_summary_preview": "Here's a concise summary of the judgment in 4 sentences:\n\nThe case involved Shatrughna Baban Meshram, who was accused of kidnapping and murdering a 2.5-year-old girl. He was charged under IPC 302 (mur",
+        "algo_summary_preview": "The Appellant is thus definitely guilty of\n\nthe offence punishable under Section 376A IPC. As\n\nagainst Section 302 IPC while dealing with cases under Section 376A IPC,\n\na wider spectrum is available f"
+      }
+    ]
+  },
+  "ranking_2f": {
+    "aggregate": {
+      "num_cases": 5,
+      "avg_spearman_rho": 0.42,
+      "top1_agreement_rate": 0.6,
+      "avg_level_agreement": 0.35,
+      "avg_score_mae": 23.88,
+      "llm_avg_time_s": 5.36,
+      "algo_avg_time_s": 0.0,
+      "speedup_x": 53600.0
+    },
+    "per_case": [
+      {
+        "case_id": "c1_armed_robbery",
+        "sections": [
+          "IPC 356",
+          "IPC 390",
+          "IPC 394",
+          "IPC 324"
+        ],
+        "llm_ranking": [
+          {
+            "section": "IPC 394",
+            "score": 90,
+            "level": "Primary"
+          },
+          {
+            "section": "IPC 390",
+            "score": 80,
+            "level": "Primary"
+          },
+          {
+            "section": "IPC 356",
+            "score": 60,
+            "level": "Supporting"
+          },
+          {
+            "section": "IPC 324",
+            "score": 40,
+            "level": "Minor"
+          }
+        ],
+        "algo_ranking": [
+          {
+            "section": "IPC 394",
+            "score": 95,
+            "level": "Primary"
+          },
+          {
+            "section": "IPC 324",
+            "score": 40,
+            "level": "Supporting"
+          },
+          {
+            "section": "IPC 356",
+            "score": 35,
+            "level": "Minor"
+          },
+          {
+            "section": "IPC 390",
+            "score": 20,
+            "level": "Minor"
+          }
+        ],
+        "spearman_rho": 0.2,
+        "top1_agree": true,
+        "level_agreement": 0.25,
+        "score_mae": 22.5,
+        "llm_time_s": 4.568,
+        "algo_time_s": 0.001
+      },
+      {
+        "case_id": "c2_house_theft",
+        "sections": [
+          "IPC 380",
+          "IPC 454",
+          "IPC 457"
+        ],
+        "llm_ranking": [
+          {
+            "section": "IPC 380",
+            "score": 80,
+            "level": "Primary"
+          },
+          {
+            "section": "IPC 454",
+            "score": 60,
+            "level": "Supporting"
+          },
+          {
+            "section": "IPC 457",
+            "score": 40,
+            "level": "Minor"
+          }
+        ],
+        "algo_ranking": [
+          {
+            "section": "IPC 380",
+            "score": 62,
+            "level": "Supporting"
+          },
+          {
+            "section": "IPC 457",
+            "score": 60,
+            "level": "Supporting"
+          },
+          {
+            "section": "IPC 454",
+            "score": 40,
+            "level": "Supporting"
+          }
+        ],
+        "spearman_rho": 0.5,
+        "top1_agree": true,
+        "level_agreement": 0.3333,
+        "score_mae": 19.33,
+        "llm_time_s": 5.466,
+        "algo_time_s": 0.0
+      },
+      {
+        "case_id": "c3_dowry_cruelty",
+        "sections": [
+          "IPC 498A",
+          "IPC 506",
+          "IPC 34"
+        ],
+        "llm_ranking": [
+          {
+            "section": "IPC 498A",
+            "score": 85,
+            "level": "Primary"
+          },
+          {
+            "section": "IPC 506",
+            "score": 70,
+            "level": "Supporting"
+          },
+          {
+            "section": "IPC 34",
+            "score": 40,
+            "level": "Minor"
+          }
+        ],
+        "algo_ranking": [
+          {
+            "section": "IPC 506",
+            "score": 62,
+            "level": "Supporting"
+          },
+          {
+            "section": "IPC 498A",
+            "score": 40,
+            "level": "Supporting"
+          },
+          {
+            "section": "IPC 34",
+            "score": 15,
+            "level": "Minor"
+          }
+        ],
+        "spearman_rho": 0.5,
+        "top1_agree": false,
+        "level_agreement": 0.6667,
+        "score_mae": 26,
+        "llm_time_s": 5.6,
+        "algo_time_s": 0.0
+      },
+      {
+        "case_id": "c4_cheating_fraud",
+        "sections": [
+          "IPC 420",
+          "IPC 406",
+          "IPC 467",
+          "IPC 468"
+        ],
+        "llm_ranking": [
+          {
+            "section": "IPC 420",
+            "score": 80,
+            "level": "Primary"
+          },
+          {
+            "section": "IPC 406",
+            "score": 70,
+            "level": "Supporting"
+          },
+          {
+            "section": "IPC 467",
+            "score": 40,
+            "level": "Minor"
+          },
+          {
+            "section": "IPC 468",
+            "score": 30,
+            "level": "Minor"
+          }
+        ],
+        "algo_ranking": [
+          {
+            "section": "IPC 467",
+            "score": 95,
+            "level": "Primary"
+          },
+          {
+            "section": "IPC 420",
+            "score": 62,
+            "level": "Supporting"
+          },
+          {
+            "section": "IPC 406",
+            "score": 40,
+            "level": "Supporting"
+          },
+          {
+            "section": "IPC 468",
+            "score": 20,
+            "level": "Minor"
+          }
+        ],
+        "spearman_rho": 0.4,
+        "top1_agree": false,
+        "level_agreement": 0.5,
+        "score_mae": 28.25,
+        "llm_time_s": 5.532,
+        "algo_time_s": 0.0
+      },
+      {
+        "case_id": "c5_kidnap_assault",
+        "sections": [
+          "IPC 365",
+          "IPC 323",
+          "IPC 506"
+        ],
+        "llm_ranking": [
+          {
+            "section": "IPC 365",
+            "score": 80,
+            "level": "Primary"
+          },
+          {
+            "section": "IPC 323",
+            "score": 60,
+            "level": "Supporting"
+          },
+          {
+            "section": "IPC 506",
+            "score": 40,
+            "level": "Minor"
+          }
+        ],
+        "algo_ranking": [
+          {
+            "section": "IPC 365",
+            "score": 62,
+            "level": "Supporting"
+          },
+          {
+            "section": "IPC 506",
+            "score": 62,
+            "level": "Supporting"
+          },
+          {
+            "section": "IPC 323",
+            "score": 30,
+            "level": "Minor"
+          }
+        ],
+        "spearman_rho": 0.5,
+        "top1_agree": true,
+        "level_agreement": 0.0,
+        "score_mae": 23.33,
+        "llm_time_s": 5.634,
+        "algo_time_s": 0.0
+      }
+    ]
+  },
+  "verdict": {
+    "summarisation_viable": true,
+    "ranking_viable": false
+  }
+}

@@ -16,6 +16,7 @@ import re
 import time
 from pathlib import Path
 
+import numpy as np
 from dotenv import load_dotenv
 from sentence_transformers import SentenceTransformer
 from langchain_groq import ChatGroq
@@ -27,6 +28,61 @@ from model_config import get_fallback_chain
 load_dotenv()
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
+
+NEGATIVE_RULE_THRESHOLD = 0.75
+
+
+def apply_negative_rule_filtering(
+    chunks: list,
+    negative_rules: dict,
+    offence_map: dict,
+    embedding_model,
+) -> list:
+    """
+    offence_map: chunk_id -> offence label (None if chunk matches no offence key in negative_rules).
+    negative_rules: offence_label -> list of negative-rule phrases for that offence only.
+    """
+    if not chunks:
+        return []
+
+    kept: list = []
+    for chunk in chunks:
+        cid = chunk.get("chunk_id")
+        offence_label = offence_map.get(cid)
+        phrases = negative_rules.get(offence_label) if offence_label else None
+        if not phrases:
+            kept.append(chunk)
+            continue
+
+        text = (chunk.get("full_text") or chunk.get("section_text") or "").strip()
+        if not text:
+            kept.append(chunk)
+            continue
+
+        embeddings = embedding_model.encode([text] + list(phrases))
+        chunk_vec = np.asarray(embeddings[0], dtype=np.float64)
+        rule_mat = np.asarray(embeddings[1:], dtype=np.float64)
+        if rule_mat.size == 0:
+            kept.append(chunk)
+            continue
+
+        nc = np.linalg.norm(chunk_vec)
+        if nc == 0:
+            kept.append(chunk)
+            continue
+        max_sim = 0.0
+        for rv in rule_mat:
+            nr = np.linalg.norm(rv)
+            if nr == 0:
+                continue
+            sim = float(np.dot(chunk_vec, rv) / (nc * nr))
+            if sim > max_sim:
+                max_sim = sim
+
+        if max_sim > NEGATIVE_RULE_THRESHOLD:
+            continue
+        kept.append(chunk)
+    return kept
 
 
 class StatuteRAGChainSystem:
@@ -194,21 +250,25 @@ Return ONLY valid JSON (no markdown, no code blocks):
         return merged
 
     def apply_negative_rules_filter(self, chunks: list[dict], case_facts: dict) -> list[dict]:
-        filtered = []
+        del case_facts  # offence-scoped semantic filter does not use raw FIR string matching
+        negative_rules: dict[str, list[str]] = {
+            r["offence"]: list(r.get("failure_examples", []))
+            for r in self.negative_rules.values()
+        }
+        labels_sorted = sorted(negative_rules.keys(), key=len, reverse=True)
+        offence_map: dict[str, str | None] = {}
         for chunk in chunks:
-            for rule_name, rule in self.negative_rules.items():
-                if rule_name.lower() in chunk["full_text"].lower():
-                    if not any(
-                        fact.lower() in ex.lower()
-                        for ex in rule.get("failure_examples", [])
-                        for fact in case_facts.values()
-                        if isinstance(fact, str)
-                    ):
-                        filtered.append(chunk)
-                        break
-            else:
-                filtered.append(chunk)
-        return filtered
+            cid = chunk.get("chunk_id")
+            ft = (chunk.get("full_text") or "").lower()
+            matched: str | None = None
+            for label in labels_sorted:
+                if label.lower() in ft:
+                    matched = label
+                    break
+            offence_map[cid] = matched
+        return apply_negative_rule_filtering(
+            chunks, negative_rules, offence_map, self.embedding_model,
+        )
 
     def find_corresponding_sections(self, law: str, section_id: str) -> list[dict]:
         corresponding = []

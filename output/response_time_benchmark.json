@@ -1,0 +1,198 @@
+{
+  "benchmark": "LexIR Pipeline Response-Time",
+  "fir_id": "FIR-2024-00123",
+  "num_runs": 3,
+  "initialization_time_s": 5.184,
+  "summary": {
+    "stage1_avg_s": 4.513,
+    "stage2_avg_s": 70.684,
+    "stage3_avg_s": 0.0,
+    "pipeline_avg_s": 75.197
+  },
+  "stage1_substeps": {
+    "1a_vector_retrieval": {
+      "mean_s": 0.871,
+      "stdev_s": 0.535,
+      "min_s": 0.291,
+      "max_s": 1.347,
+      "runs": 3
+    },
+    "1b_negative_rules_filter": {
+      "mean_s": 0.0,
+      "stdev_s": 0.0,
+      "min_s": 0.0,
+      "max_s": 0.0,
+      "runs": 3
+    },
+    "1c_intent_identification_llm": {
+      "mean_s": 0.285,
+      "stdev_s": 0.066,
+      "min_s": 0.245,
+      "max_s": 0.362,
+      "runs": 3
+    },
+    "1d_intent_driven_retrieval": {
+      "mean_s": 0.815,
+      "stdev_s": 0.051,
+      "min_s": 0.779,
+      "max_s": 0.874,
+      "runs": 3
+    },
+    "1e_legal_reasoning_llm": {
+      "mean_s": 2.061,
+      "stdev_s": 0.391,
+      "min_s": 1.795,
+      "max_s": 2.509,
+      "runs": 3
+    },
+    "1f_statute_enrichment": {
+      "mean_s": 0.48,
+      "stdev_s": 0.275,
+      "min_s": 0.192,
+      "max_s": 0.738,
+      "runs": 3
+    }
+  },
+  "stage2_substeps": {
+    "2a_build_fact_query_llm": {
+      "mean_s": 0.215,
+      "stdev_s": 0.063,
+      "min_s": 0.177,
+      "max_s": 0.288,
+      "runs": 3
+    },
+    "2b_kanoon_api_search": {
+      "mean_s": 2.162,
+      "stdev_s": 1.315,
+      "min_s": 1.307,
+      "max_s": 3.676,
+      "runs": 3
+    },
+    "2c_fetch_judgments": {
+      "mean_s": 0.288,
+      "stdev_s": 0.191,
+      "min_s": 0.157,
+      "max_s": 0.507,
+      "runs": 3
+    },
+    "2d_summarize_cases_llm": {
+      "mean_s": 36.233,
+      "stdev_s": 29.193,
+      "min_s": 2.569,
+      "max_s": 54.576,
+      "runs": 3
+    },
+    "2e_predict_verdict_llm": {
+      "mean_s": 14.337,
+      "stdev_s": 1.197,
+      "min_s": 13.573,
+      "max_s": 15.717,
+      "runs": 3
+    },
+    "2f_rank_influence_llm": {
+      "mean_s": 17.45,
+      "stdev_s": 0.765,
+      "min_s": 16.927,
+      "max_s": 18.328,
+      "runs": 3
+    }
+  },
+  "stage3_substeps": {
+    "3a_qa_synthesize_llm": {
+      "mean_s": 0.0,
+      "stdev_s": 0.0,
+      "min_s": 0.0,
+      "max_s": 0.0,
+      "runs": 3
+    }
+  },
+  "totals": {
+    "pipeline_total": {
+      "mean_s": 75.197,
+      "stdev_s": 28.748,
+      "min_s": 42.011,
+      "max_s": 92.434,
+      "runs": 3
+    },
+    "stage1_total": {
+      "mean_s": 4.513,
+      "stdev_s": 0.354,
+      "min_s": 4.111,
+      "max_s": 4.777,
+      "runs": 3
+    },
+    "stage2_total": {
+      "mean_s": 70.684,
+      "stdev_s": 28.972,
+      "min_s": 37.233,
+      "max_s": 87.784,
+      "runs": 3
+    },
+    "stage3_total": {
+      "mean_s": 0.0,
+      "stdev_s": 0.0,
+      "min_s": 0.0,
+      "max_s": 0.0,
+      "runs": 3
+    }
+  },
+  "per_run_detail": [
+    {
+      "1a_vector_retrieval": 1.347,
+      "1b_negative_rules_filter": 0.0,
+      "1c_intent_identification_llm": 0.25,
+      "1d_intent_driven_retrieval": 0.792,
+      "1e_legal_reasoning_llm": 1.878,
+      "1f_statute_enrichment": 0.51,
+      "stage1_total": 4.777,
+      "2a_build_fact_query_llm": 0.288,
+      "2b_kanoon_api_search": 3.676,
+      "2c_fetch_judgments": 0.199,
+      "2d_summarize_cases_llm": 2.569,
+      "2e_predict_verdict_llm": 13.573,
+      "2f_rank_influence_llm": 16.927,
+      "stage2_total": 37.233,
+      "3a_qa_synthesize_llm": 0.0,
+      "stage3_total": 0.0,
+      "pipeline_total": 42.011
+    },
+    {
+      "1a_vector_retrieval": 0.291,
+      "1b_negative_rules_filter": 0.0,
+      "1c_intent_identification_llm": 0.245,
+      "1d_intent_driven_retrieval": 0.874,
+      "1e_legal_reasoning_llm": 2.509,
+      "1f_statute_enrichment": 0.192,
+      "stage1_total": 4.111,
+      "2a_build_fact_query_llm": 0.18,
+      "2b_kanoon_api_search": 1.307,
+      "2c_fetch_judgments": 0.157,
+      "2d_summarize_cases_llm": 54.576,
+      "2e_predict_verdict_llm": 13.721,
+      "2f_rank_influence_llm": 17.095,
+      "stage2_total": 87.035,
+      "3a_qa_synthesize_llm": 0.0,
+      "stage3_total": 0.0,
+      "pipeline_total": 91.147
+    },
+    {
+      "1a_vector_retrieval": 0.976,
+      "1b_negative_rules_filter": 0.0,
+      "1c_intent_identification_llm": 0.362,
+      "1d_intent_driven_retrieval": 0.779,
+      "1e_legal_reasoning_llm": 1.795,
+      "1f_statute_enrichment": 0.738,
+      "stage1_total": 4.65,
+      "2a_build_fact_query_llm": 0.177,
+      "2b_kanoon_api_search": 1.503,
+      "2c_fetch_judgments": 0.507,
+      "2d_summarize_cases_llm": 51.553,
+      "2e_predict_verdict_llm": 15.717,
+      "2f_rank_influence_llm": 18.328,
+      "stage2_total": 87.784,
+      "3a_qa_synthesize_llm": 0.0,
+      "stage3_total": 0.0,
+      "pipeline_total": 92.434
+    }
+  ]
+}

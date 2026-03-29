@@ -11,7 +11,10 @@ function App() {
   const {
     connected, currentStage, loading, error,
     fir, stage1, stage2, chatMessages,
+    sessions, loadedSession, pipelineProgress,
+    sessionId, isFIRExpanded, setIsFIRExpanded,
     startAnalysis, askQuestion, showCases, resetChat,
+    loadSession, deleteSession, formResetKey,
   } = useLexIR('ws://localhost:8000/ws');
 
   const hasAnalysis = !!(stage1 || stage2);
@@ -55,8 +58,13 @@ function App() {
         connected={connected}
         currentStage={currentStage}
         hasAnalysis={hasAnalysis}
+        sessions={sessions}
+        activeSessionId={sessionId}
         onShowCases={showCases}
         onReset={resetChat}
+        onLoadSession={loadSession}
+        onDeleteSession={deleteSession}
+        onNewSession={resetChat}
       />
 
       <main className="main-panel">
@@ -86,11 +94,23 @@ function App() {
 
         {/* FIR Form (always visible — collapsed after analysis) */}
         <div className="form-container">
-          <FIRForm onSubmit={startAnalysis} disabled={loading || !connected} hasAnalysis={hasAnalysis} />
+          <FIRForm
+            onSubmit={startAnalysis}
+            disabled={loading || !connected}
+            hasAnalysis={hasAnalysis}
+            formResetKey={formResetKey}
+            isExpanded={isFIRExpanded}
+            onToggleExpand={setIsFIRExpanded}
+          />
         </div>
 
         {/* Chat area */}
-        <ChatArea messages={chatMessages} loading={loading} />
+        <ChatArea
+          messages={chatMessages}
+          loading={loading}
+          loadedSession={loadedSession}
+          pipelineProgress={pipelineProgress}
+        />
 
         {/* Chat input (shown once Q&A stage is reached) */}
         {qaReady && (

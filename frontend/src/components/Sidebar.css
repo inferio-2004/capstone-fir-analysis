@@ -45,6 +45,161 @@
 .connection-status.online  { background: rgba(34,197,94,0.12); color: var(--green); }
 .connection-status.offline { background: rgba(239,68,68,0.12); color: var(--red); }
 
+/* History list */
+.sidebar-history {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+}
+.sidebar-history h4 {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  color: var(--text-muted);
+  margin-bottom: 8px;
+  flex-shrink: 0;
+}
+.history-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  flex: 1;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+
+.history-row-wrap {
+  position: relative;
+}
+
+.history-row {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+  width: 100%;
+  padding: 8px 10px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--bg-card);
+  color: var(--text);
+  font-size: 11px;
+  text-align: left;
+  cursor: pointer;
+  transition: border-color 0.2s, background 0.2s;
+}
+
+.history-row:hover {
+  border-color: var(--accent);
+  background: rgba(99, 102, 241, 0.06);
+}
+
+.history-row-content {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex: 1;
+  min-width: 0;
+}
+
+/* delete button hidden until hover */
+.history-delete {
+  flex-shrink: 0;
+  opacity: 0;
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: opacity 0.15s, color 0.15s, background 0.15s;
+}
+
+.history-row-wrap:hover .history-delete {
+  opacity: 1;
+}
+
+.history-delete:hover {
+  color: var(--red);
+  background: rgba(239, 68, 68, 0.1);
+}
+
+/* active state */
+.history-row-wrap.active .history-row {
+  border-color: var(--accent);
+  background: rgba(99, 102, 241, 0.1);
+  box-shadow: inset 3px 0 0 var(--accent);
+}
+
+.history-row-wrap.active .history-preview {
+  color: var(--accent);
+  font-weight: 600;
+}
+
+/* remove these — no longer needed */
+/* .history-row-container — delete entirely */
+.btn-new-session {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  margin-bottom: 10px;
+  padding: 10px 12px;
+  font-size: 13px;
+  font-weight: 600;
+  border-radius: var(--radius-sm);
+  border: 1px dashed var(--border);
+  background: var(--bg-card);
+  color: var(--accent);
+  cursor: pointer;
+  transition: background 0.2s, border-color 0.2s;
+}
+.btn-new-session:hover {
+  border-color: var(--accent);
+  background: rgba(99, 102, 241, 0.08);
+}
+
+.history-pending {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--text-muted);
+  font-style: italic;
+}
+.history-spinner {
+  flex-shrink: 0;
+}
+
+.history-empty {
+  font-size: 11px;
+  color: var(--text-muted);
+  margin: 0;
+}
+
+.history-preview {
+  line-height: 1.35;
+  word-break: break-word;
+}
+.history-meta {
+  font-size: 10px;
+  color: var(--text-muted);
+}
+
+.sidebar .spin {
+  animation: sidebar-spin 1s linear infinite;
+}
+@keyframes sidebar-spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
 /* Pipeline steps */
 .pipeline-stages h4 {
   font-size: 11px;
@@ -131,4 +286,20 @@
 }
 .sidebar::-webkit-scrollbar-thumb:hover {
   background: var(--text-muted);
+}
+
+.history-list::-webkit-scrollbar {
+  width: 3px;
+}
+.history-list::-webkit-scrollbar-track {
+  background: transparent;
+}
+.history-list::-webkit-scrollbar-thumb {
+  background: var(--accent);
+  border-radius: 999px;
+  opacity: 0.5;
+}
+.history-list::-webkit-scrollbar-thumb:hover {
+  background: var(--accent);
+  opacity: 1;
 }

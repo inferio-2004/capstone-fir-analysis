@@ -68,6 +68,6 @@ desktop.ini
 *.tmp
 *.bak
 *.cache
-
+AGENT_README (1).md
 #any pdfs
 *.pdf

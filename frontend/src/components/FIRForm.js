@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Send, ChevronDown, ChevronUp } from 'lucide-react';
 import './FIRForm.css';
 
@@ -23,11 +23,73 @@ const EMPTY = {
   property_value: '',
 };
 
-export default function FIRForm({ onSubmit, disabled, hasAnalysis }) {
+function firToFormFields(fir) {
+  if (!fir || typeof fir !== 'object') return { ...EMPTY };
+  return {
+    ...EMPTY,
+    complainant_name: fir.complainant_name ?? '',
+    father_husband_name: fir.father_husband_name ?? '',
+    complainant_dob: fir.complainant_dob ?? '',
+    nationality: fir.nationality || 'Indian',
+    occupation: fir.occupation ?? '',
+    complainant_address: fir.complainant_address ?? '',
+    accused_names_str: Array.isArray(fir.accused_names)
+      ? fir.accused_names.join(', ')
+      : (fir.accused_names_str ?? ''),
+    victim_name: fir.victim_name ?? '',
+    incident_description: fir.incident_description ?? '',
+    victim_impact: fir.victim_impact ?? '',
+    evidence: fir.evidence ?? '',
+    location: fir.location ?? '',
+    district: fir.district ?? '',
+    police_station: fir.police_station ?? '',
+    date: fir.date || EMPTY.date,
+    delay_reason: fir.delay_reason ?? '',
+    properties_stolen: fir.properties_stolen ?? '',
+    property_value: fir.property_value ?? '',
+  };
+}
+
+export default function FIRForm({
+  onSubmit,
+  disabled,
+  hasAnalysis,
+  formResetKey = 0,
+  viewMode = 'edit',
+  firSnapshot = null,
+  isExpanded: controlledExpanded,
+  onToggleExpand,
+}) {
   const [form, setForm] = useState(EMPTY);
-  const [expanded, setExpanded] = useState(true);
+  const [internalExpanded, setInternalExpanded] = useState(true);
+  const [historyEditUnlocked, setHistoryEditUnlocked] = useState(false);
+
+  const isHistory = viewMode === 'history';
+
+  // Use controlled state if provided, otherwise use internal state
+  const isExpanded = controlledExpanded !== undefined ? controlledExpanded : internalExpanded;
+  const setExpanded = (val) => {
+    if (onToggleExpand) onToggleExpand(val);
+    else setInternalExpanded(val);
+  };
+
+  useEffect(() => {
+    setForm(EMPTY);
+    setExpanded(true);
+    setHistoryEditUnlocked(false);
+  }, [formResetKey]);
+
+  useEffect(() => {
+    if (isHistory && firSnapshot) {
+      setForm(firToFormFields(firSnapshot));
+      setExpanded(true);
+      setHistoryEditUnlocked(false);
+    }
+  }, [isHistory, firSnapshot]);
 
   const set = (key) => (e) => setForm(f => ({ ...f, [key]: e.target.value }));
+
+  const readOnly = isHistory && !historyEditUnlocked;
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -58,95 +120,144 @@ export default function FIRForm({ onSubmit, disabled, hasAnalysis }) {
     };
 
     onSubmit(fir);
-    setExpanded(false);
+    if (!isHistory) setExpanded(false);
   };
 
   const handleSampleFIR = () => {
     onSubmit(null);
-    setExpanded(false);
+    if (!isHistory) setExpanded(false);
   };
 
-  if (!expanded) {
+  if (!isExpanded && !isHistory) {
     return (
       <div className="fir-form-collapsed" onClick={() => setExpanded(true)}>
         <span className="fir-form-collapsed-text">
           {hasAnalysis ? 'Edit FIR & re-analyze' : 'FIR submitted — click to edit & resubmit'}
         </span>
-        <ChevronDown size={14} style={{ marginLeft: 6, opacity: 0.5 }} />
       </div>
     );
   }
 
   return (
-    <form className="fir-form" onSubmit={handleSubmit}>
+    <form className={`fir-form ${isHistory ? 'fir-form-history' : ''}`} onSubmit={handleSubmit}>
       <div className="fir-form-header">
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-          <h3>{hasAnalysis ? 'Edit & Re-analyze Case' : 'Submit a Case for Analysis'}</h3>
-          {hasAnalysis && (
-            <button type="button" className="btn btn-secondary" style={{ padding: '4px 10px', fontSize: 12 }} onClick={() => setExpanded(false)}>
-              <ChevronUp size={14} /> Collapse
-            </button>
-          )}
+          <h3>
+            {isHistory
+              ? 'FIR (loaded session)'
+              : hasAnalysis
+                ? 'Edit & Re-analyze Case'
+                : 'Submit a Case for Analysis'}
+          </h3>
+          <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+            {isHistory && (
+              <>
+                <button
+                  type="button"
+                  className="btn btn-secondary"
+                  style={{ padding: '4px 10px', fontSize: 12 }}
+                  onClick={() => setHistoryEditUnlocked(true)}
+                  disabled={historyEditUnlocked}
+                >
+                  Edit FIR & re-analyze
+                </button>
+                {historyEditUnlocked && (
+                  <button
+                    type="button"
+                    className="btn btn-secondary"
+                    style={{ padding: '4px 10px', fontSize: 12 }}
+                    onClick={() => setExpanded(false)}
+                  >
+                    <ChevronUp size={14} /> Collapse
+                  </button>
+                )}
+              </>
+            )}
+            {/* {hasAnalysis && !isHistory && (
+              <button
+                type="button"
+                className="btn btn-secondary"
+                style={{ padding: '4px 10px', fontSize: 12 }}
+                onClick={() => setExpanded(false)}
+              >
+                <ChevronUp size={14} /> Collapse
+              </button>
+            )} */}
+            {!isHistory && (
+              <button
+                type="button"
+                className="btn btn-secondary"
+                style={{ padding: '4px 10px', fontSize: 12 }}
+                onClick={() => setExpanded(false)}
+              >
+                <ChevronUp size={14} /> Collapse
+              </button>
+            )}
+          </div>
         </div>
-        <p>Fill in the case details below, or use the sample FIR to try the system.</p>
+        <p>
+          {isHistory
+            ? 'Read-only snapshot of the FIR for this session. Unlock to edit and run a new analysis.'
+            : 'Fill in the case details below, or use the sample FIR to try the system.'}
+        </p>
       </div>
 
       {/* ---- Case core ---- */}
       <div className="fir-form-grid">
         <div className="fir-field">
           <label>Complainant Name</label>
-          <input type="text" placeholder="e.g. Rajesh Kumar" value={form.complainant_name} onChange={set('complainant_name')} />
+          <input readOnly={readOnly} type="text" placeholder="e.g. Rajesh Kumar" value={form.complainant_name} onChange={set('complainant_name')} />
         </div>
         <div className="fir-field">
           <label>Father / Husband Name</label>
-          <input type="text" placeholder="e.g. Suresh Kumar" value={form.father_husband_name} onChange={set('father_husband_name')} />
+          <input readOnly={readOnly} type="text" placeholder="e.g. Suresh Kumar" value={form.father_husband_name} onChange={set('father_husband_name')} />
         </div>
 
         <div className="fir-field">
           <label>Complainant DOB</label>
-          <input type="date" value={form.complainant_dob} onChange={set('complainant_dob')} />
+          <input readOnly={readOnly} type="date" value={form.complainant_dob} onChange={set('complainant_dob')} />
         </div>
         <div className="fir-field">
           <label>Nationality</label>
-          <input type="text" placeholder="Indian" value={form.nationality} onChange={set('nationality')} />
+          <input readOnly={readOnly} type="text" placeholder="Indian" value={form.nationality} onChange={set('nationality')} />
         </div>
 
         <div className="fir-field">
           <label>Occupation</label>
-          <input type="text" placeholder="e.g. Software Engineer" value={form.occupation} onChange={set('occupation')} />
+          <input readOnly={readOnly} type="text" placeholder="e.g. Software Engineer" value={form.occupation} onChange={set('occupation')} />
         </div>
         <div className="fir-field">
           <label>Complainant Address</label>
-          <input type="text" placeholder="e.g. 12, MG Road, New Delhi" value={form.complainant_address} onChange={set('complainant_address')} />
+          <input readOnly={readOnly} type="text" placeholder="e.g. 12, MG Road, New Delhi" value={form.complainant_address} onChange={set('complainant_address')} />
         </div>
       </div>
 
       <div className="fir-form-grid">
         <div className="fir-field">
           <label>Victim Name</label>
-          <input type="text" placeholder="e.g. Priya Sharma" value={form.victim_name} onChange={set('victim_name')} />
+          <input readOnly={readOnly} type="text" placeholder="e.g. Priya Sharma" value={form.victim_name} onChange={set('victim_name')} />
         </div>
         <div className="fir-field">
           <label>Accused Names <span className="hint">(comma-separated)</span></label>
-          <input type="text" placeholder="e.g. Amit Singh, Vikram Patel" value={form.accused_names_str} onChange={set('accused_names_str')} />
+          <input readOnly={readOnly} type="text" placeholder="e.g. Amit Singh, Vikram Patel" value={form.accused_names_str} onChange={set('accused_names_str')} />
         </div>
 
         <div className="fir-field">
           <label>Date of Incident</label>
-          <input type="date" value={form.date} onChange={set('date')} />
+          <input readOnly={readOnly} type="date" value={form.date} onChange={set('date')} />
         </div>
         <div className="fir-field">
           <label>Location / Place of Occurrence</label>
-          <input type="text" placeholder="e.g. Sector 45, Chandigarh" value={form.location} onChange={set('location')} />
+          <input readOnly={readOnly} type="text" placeholder="e.g. Sector 45, Chandigarh" value={form.location} onChange={set('location')} />
         </div>
 
         <div className="fir-field">
           <label>District</label>
-          <input type="text" placeholder="e.g. Central Delhi" value={form.district} onChange={set('district')} />
+          <input readOnly={readOnly} type="text" placeholder="e.g. Central Delhi" value={form.district} onChange={set('district')} />
         </div>
         <div className="fir-field">
           <label>Police Station</label>
-          <input type="text" placeholder="e.g. Sector 41 PS" value={form.police_station} onChange={set('police_station')} />
+          <input readOnly={readOnly} type="text" placeholder="e.g. Sector 41 PS" value={form.police_station} onChange={set('police_station')} />
         </div>
       </div>
 
@@ -154,6 +265,7 @@ export default function FIRForm({ onSubmit, disabled, hasAnalysis }) {
       <div className="fir-field full">
         <label>Incident Description <span className="required">*</span></label>
         <textarea
+          readOnly={readOnly}
           rows={4}
           placeholder="Describe what happened in detail — this is the most important field for analysis..."
           value={form.incident_description}
@@ -165,6 +277,7 @@ export default function FIRForm({ onSubmit, disabled, hasAnalysis }) {
       <div className="fir-field full">
         <label>Victim Impact</label>
         <textarea
+          readOnly={readOnly}
           rows={2}
           placeholder="Physical injuries, psychological trauma, financial loss..."
           value={form.victim_impact}
@@ -175,6 +288,7 @@ export default function FIRForm({ onSubmit, disabled, hasAnalysis }) {
       <div className="fir-field full">
         <label>Evidence</label>
         <textarea
+          readOnly={readOnly}
           rows={2}
           placeholder="CCTV footage, witnesses, medical reports, physical evidence..."
           value={form.evidence}
@@ -186,28 +300,39 @@ export default function FIRForm({ onSubmit, disabled, hasAnalysis }) {
       <div className="fir-form-grid">
         <div className="fir-field">
           <label>Properties Stolen / Involved</label>
-          <input type="text" placeholder="e.g. Gold chain, mobile phone" value={form.properties_stolen} onChange={set('properties_stolen')} />
+          <input readOnly={readOnly} type="text" placeholder="e.g. Gold chain, mobile phone" value={form.properties_stolen} onChange={set('properties_stolen')} />
         </div>
         <div className="fir-field">
           <label>Total Value of Property</label>
-          <input type="text" placeholder="e.g. ₹50,000" value={form.property_value} onChange={set('property_value')} />
+          <input readOnly={readOnly} type="text" placeholder="e.g. ₹50,000" value={form.property_value} onChange={set('property_value')} />
         </div>
       </div>
 
       <div className="fir-field full">
         <label>Reason for Delay in Reporting <span className="hint">(if any)</span></label>
-        <input type="text" placeholder="e.g. Complainant was hospitalised" value={form.delay_reason} onChange={set('delay_reason')} />
+        <input readOnly={readOnly} type="text" placeholder="e.g. Complainant was hospitalised" value={form.delay_reason} onChange={set('delay_reason')} />
       </div>
 
-      <div className="fir-form-actions">
-        <button type="submit" className="btn btn-primary" disabled={disabled || !form.incident_description.trim()}>
-          <Send size={16} />
-          {hasAnalysis ? 'Re-analyze Case' : 'Analyze Case'}
-        </button>
-        <button type="button" className="btn btn-secondary" onClick={handleSampleFIR} disabled={disabled}>
-          Use Sample FIR
-        </button>
-      </div>
+      {!isHistory && (
+        <div className="fir-form-actions">
+          <button type="submit" className="btn btn-primary" disabled={disabled || !form.incident_description.trim()}>
+            <Send size={16} />
+            {hasAnalysis ? 'Re-analyze Case' : 'Analyze Case'}
+          </button>
+          <button type="button" className="btn btn-secondary" onClick={handleSampleFIR} disabled={disabled}>
+            Use Sample FIR
+          </button>
+        </div>
+      )}
+
+      {isHistory && historyEditUnlocked && (
+        <div className="fir-form-actions">
+          <button type="submit" className="btn btn-primary" disabled={disabled || !form.incident_description.trim()}>
+            <Send size={16} />
+            Re-analyze Case
+          </button>
+        </div>
+      )}
     </form>
   );
 }

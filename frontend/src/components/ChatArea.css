@@ -1,4 +1,77 @@
 /* ============ CHAT AREA ============ */
+.history-separator {
+  text-align: center;
+  font-size: 11px;
+  color: var(--text-muted);
+  padding: 12px 0 8px;
+  letter-spacing: 0.04em;
+}
+
+.fir-loaded-block {
+  padding: 14px 16px;
+  margin-bottom: 8px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border);
+  background: var(--bg-card);
+}
+.fir-loaded-title {
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-muted);
+  margin: 0 0 10px;
+}
+.fir-loaded-dl {
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.fir-loaded-row dt {
+  font-size: 10px;
+  color: var(--text-muted);
+  margin: 0;
+}
+.fir-loaded-row dd {
+  font-size: 13px;
+  margin: 2px 0 0;
+  line-height: 1.45;
+  color: var(--text);
+}
+
+.pipeline-progress {
+  padding: 14px 16px;
+  margin-bottom: 8px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border);
+  background: rgba(99, 102, 241, 0.06);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+.pipeline-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 22px;
+}
+.pipeline-row-static {
+  color: var(--text);
+  font-weight: 500;
+}
+.pipeline-icon {
+  flex-shrink: 0;
+  color: var(--accent);
+}
+.pipeline-check {
+  color: var(--green);
+  font-weight: 700;
+  width: 18px;
+  text-align: center;
+}
+
 .chat-area {
   flex: 1;
   overflow-y: auto;

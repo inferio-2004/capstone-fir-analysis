@@ -6,6 +6,12 @@
   min-height: 0;        /* allow flex child to shrink below content height */
 }
 
+.fir-form-history input[readonly],
+.fir-form-history textarea[readonly] {
+  background: rgba(0, 0, 0, 0.04);
+  cursor: default;
+}
+
 .fir-form {
   background: var(--bg-card);
   border: 1px solid var(--border);

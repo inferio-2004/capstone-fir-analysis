@@ -6,6 +6,7 @@ Uses Groq LLM to synthesize answers from retrieved QA pairs.
 """
 
 from __future__ import annotations
+import json
 import os
 import textwrap
 from groq import Groq
@@ -13,6 +14,65 @@ from dotenv import load_dotenv
 from model_config import groq_chat_with_fallback
 
 load_dotenv()
+
+
+def _format_stage1_json(stage1_result: dict) -> str:
+    try:
+        return json.dumps(stage1_result, indent=2, ensure_ascii=False)[:12000]
+    except Exception:
+        return str(stage1_result)[:12000]
+
+
+def _format_stage2_cases(stage2_result: dict) -> str:
+    lines = []
+    vp = stage2_result.get("verdict_prediction") or {}
+    lines.append(f"Verdict prediction (structured): {json.dumps(vp, ensure_ascii=False)}")
+    for i, c in enumerate(stage2_result.get("cases") or [], 1):
+        lines.append(
+            f"[Case {i}] {c.get('title', '')}\n"
+            f"  Court: {c.get('court', '')}\n"
+            f"  Summary: {c.get('summary', '')}\n"
+        )
+    return "\n".join(lines)
+
+
+def answer_question(question: str, fir: str, stage1_result: dict, stage2_result: dict) -> str:
+    """
+    Context-grounded Q&A using Stage 1 + Stage 2 results only (no new retrieval).
+    """
+    system_prompt = f"""You are a legal assistant analyzing a specific FIR case.
+
+FIR TEXT:
+{fir}
+
+IDENTIFIED IPC/BNS SECTIONS (Stage 1):
+{_format_stage1_json(stage1_result)}
+
+PRECEDENT CASES FOUND (Stage 2):
+{_format_stage2_cases(stage2_result)}
+
+VERDICT PREDICTION:
+{json.dumps(stage2_result.get('verdict_prediction') or {}, indent=2, ensure_ascii=False)}
+
+Answer the user's question strictly based on the above context.
+Do not search for new cases. Do not say "no precedents found".
+If the answer is not in the context, say so explicitly."""
+
+    client = Groq(api_key=os.environ.get("GROQ_API_KEY"))
+    try:
+        return groq_chat_with_fallback(
+            client,
+            role="qa",
+            messages=[
+                {"role": "system", "content": system_prompt},
+                {"role": "user", "content": question},
+            ],
+            temperature=0.3,
+            max_tokens=700,
+        )
+    except Exception as e:
+        return f"[LLM Error] {e}"
+
 
 SYSTEM_PROMPT = """You are an Indian legal expert assistant. Answer the user's question 
 using ONLY the provided case precedents retrieved from Indian court judgments. 

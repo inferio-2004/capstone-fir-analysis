@@ -33,7 +33,24 @@ from ws_handlers import (                                          # noqa: E402
     handle_start_analysis,
     handle_full_analysis,
     handle_ask_question,
+    handle_list_sessions,
+    handle_get_history,
+    handle_clear_session,
 )
+
+try:
+    from pymongo import MongoClient
+except ImportError:
+    MongoClient = None  # type: ignore
+
+mongo_client = None
+sessions_col = None
+try:
+    if MongoClient is not None:
+        mongo_client = MongoClient("mongodb://localhost:27017")
+        sessions_col = mongo_client["lexir"]["chat_sessions"]
+except Exception as e:
+    print(f"[SERVER] MongoDB unavailable: {e}")
 
 # ---------------------------------------------------------------------------
 #  FastAPI App
@@ -103,6 +120,7 @@ async def startup():
     _deps.kanoon_searcher = search_and_analyze
     _deps.ensure_rag_system = _ensure_rag_system
     _deps.audit = _audit
+    _deps.mongo_sessions_col = sessions_col
     print("[SERVER] ✓ All models loaded — server ready")
 
 
@@ -116,6 +134,39 @@ async def health():
         "models_loaded": _deps.qa_engine is not None,
         "timestamp": datetime.now(timezone.utc).isoformat(),
     }
+
+
+@app.get("/api/sessions")
+async def api_list_sessions():
+    try:
+        if sessions_col is None:
+            return {"sessions": []}
+        pipeline = [
+            {"$project": {
+                "_id": 1,
+                "fir_preview": 1,
+                "created_at": 1,
+                "status": 1,
+                "message_count": {"$size": {"$ifNull": ["$messages", []]}},
+            }},
+            {"$sort": {"created_at": -1}},
+        ]
+        rows = list(sessions_col.aggregate(pipeline))
+        return {
+            "sessions": [
+                {
+                    "id": r["_id"],
+                    "fir_preview": r.get("fir_preview", ""),
+                    "message_count": r.get("message_count", 0),
+                    "created_at": r.get("created_at", ""),
+                    "status": r.get("status", "complete"),
+                }
+                for r in rows
+            ],
+        }
+    except Exception as e:
+        print(f"[SERVER] GET /api/sessions failed: {e}")
+        return {"sessions": []}
 
 
 @app.get("/api/fir/sample")
@@ -214,6 +265,12 @@ async def websocket_endpoint(ws: WebSocket):
                 await handle_full_analysis(msg, session_id, send, send_status, _deps)
             elif msg_type == "ask_question":
                 await handle_ask_question(msg, session_id, send, send_status, _deps)
+            elif msg_type == "list_sessions":
+                await handle_list_sessions(msg, session_id, send, send_status, _deps)
+            elif msg_type == "get_history":
+                await handle_get_history(msg, session_id, send, send_status, _deps)
+            elif msg_type == "clear_session":
+                await handle_clear_session(msg, session_id, send, send_status, _deps)
             elif msg_type in ("search_kanoon", "show_cases"):
                 ctx = _deps.sessions[session_id]
                 if ctx.get("sim_result"):
