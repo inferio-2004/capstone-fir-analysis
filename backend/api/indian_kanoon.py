@@ -410,6 +410,7 @@ def search_and_analyze(
     max_per_section: int = MAX_PER_SECTION,
 
     max_total: int = MAX_TOTAL_CASES,
+    callback: callable = None,
 
 ) -> dict:
 
@@ -461,6 +462,7 @@ def search_and_analyze(
 
     ipc_sections = _extract_ipc_sections(mapped_sections)
 
+    if callback: callback(f"Extracted relevant IPC sections for search: {', '.join(ipc_sections)}")
     print(f"\n[STEP 1] Extracted IPC sections: {ipc_sections}")
 
     if not ipc_sections and not fir_summary:
@@ -539,6 +541,7 @@ def search_and_analyze(
 
     if fact_query:
 
+        if callback: callback(f"Searching Indian Kanoon with fact-based query: {fact_query}")
         print(f"\n[KANOON SEARCH QUERY 1 - Deterministic]\n  Query: \"{fact_query}\"")
 
         result = search_kanoon(fact_query)
@@ -622,6 +625,7 @@ def search_and_analyze(
 
     # Fetch judgment text + summarise
 
+    if callback: callback(f"Found {len(all_cases)} potential cases. Fetching and summarizing judgment texts...")
     print(f"[Kanoon] Fetching & summarizing {len(all_cases)} cases...")
 
     for case in all_cases:
@@ -650,6 +654,7 @@ def search_and_analyze(
 
     # Predict verdict
 
+    if callback: callback("Synthesizing verdict prediction based on retrieved case law...")
     print("[Kanoon] Predicting verdict based on precedents...")
 
     cases_with_summaries = [c for c in all_cases if c.get("summary")]
@@ -668,6 +673,7 @@ def search_and_analyze(
 
     # Rank section influence
 
+    if callback: callback("Analyzing the influence of each IPC section on the final verdict...")
     print("[Kanoon] Ranking section influence on verdict...")
 
     section_influence = rank_section_influence(

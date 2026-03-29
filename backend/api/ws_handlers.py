@@ -91,26 +91,35 @@ def _load_fir(msg: dict, send_status, is_default_ok: bool = True) -> dict | None
     return fir_data
 
 
-async def _run_stage2(mapped_sections, fir_summary, deps: ServerDeps):
+async def _run_stage2(mapped_sections, fir_summary, deps: ServerDeps, thought_callback: Callable = None):
     """Run Indian Kanoon search + verdict prediction (Stage 2) in a thread."""
     loop = asyncio.get_event_loop()
+
+    def _sync_callback(t):
+        if thought_callback:
+            asyncio.run_coroutine_threadsafe(thought_callback(t), loop)
+
     try:
         return await loop.run_in_executor(
             None,
             lambda: deps.kanoon_searcher(
                 mapped_sections=mapped_sections,
                 fir_summary=fir_summary,
+                callback=_sync_callback
             ),
         )
     except Exception as e:
         return {"status": "error", "cases": [], "verdict_prediction": None, "error": str(e)}
 
 
-async def _run_rag_analysis(fir_data, deps: ServerDeps):
+async def _run_rag_analysis(fir_data, deps: ServerDeps, thought_callback: Callable = None):
     """Run the full RAG chain analysis in a thread."""
     system = deps.ensure_rag_system()
     loop = asyncio.get_event_loop()
-    return await loop.run_in_executor(None, system.analyze_fir_with_chains, fir_data)
+    return await loop.run_in_executor(
+        None,
+        lambda: system.analyze_fir_with_chains(fir_data, callback=thought_callback)
+    )
 
 
 # ---------------------------------------------------------------------------
@@ -173,8 +182,12 @@ async def handle_start_analysis(
                 return
     else:
         await send_status(1, "Running live RAG analysis on your FIR (Pinecone + LLM)... ~30-60 s")
+
+        async def _thought(t):
+            await send({"type": "thought", "stage": 1, "message": t})
+
         try:
-            analysis = await _run_rag_analysis(fir_data, deps)
+            analysis = await _run_rag_analysis(fir_data, deps, thought_callback=_thought)
         except Exception as e:
             await send({"type": "error", "message": f"RAG analysis failed: {e}"})
             return
@@ -196,12 +209,17 @@ async def handle_start_analysis(
             )
     except Exception as e:
         print(f"[Mongo] save stage1: {e}")
+    await send({"type": "remove_thought", "stage": 1})
     await send({"type": "stage1_result", "stage": 1, "data": stage1_data})
     deps.audit("stage1_complete", session_id)
 
     # 3. Stage 2
     await send_status(2, "Searching Indian Kanoon for real case law & predicting verdict...")
-    stage2_result = await _run_stage2(mapped_sections, fir_summary, deps)
+
+    async def _thought2(t):
+        await send({"type": "thought", "stage": 2, "message": t})
+
+    stage2_result = await _run_stage2(mapped_sections, fir_summary, deps, thought_callback=_thought2)
     ctx["sim_result"] = stage2_result
     deps.analysis_context[analysis_sid]["stage2"] = stage2_result
     try:
@@ -217,6 +235,7 @@ async def handle_start_analysis(
             await push_sessions_list(send, deps)
     except Exception as e:
         print(f"[Mongo] save stage2: {e}")
+    await send({"type": "remove_thought", "stage": 2})
     await send({"type": "stage2_result", "stage": 2, "data": stage2_result})
     deps.audit("stage2_complete", session_id)
 
@@ -264,8 +283,12 @@ async def handle_full_analysis(
     await send({"type": "fir_loaded", "stage": 1, "fir": fir_data, "session_id": analysis_sid})
 
     await send_status(1, "Running full RAG chain analysis (Pinecone + LLM)... This may take 30-60 seconds.")
+
+    async def _thought(t):
+        await send({"type": "thought", "stage": 1, "message": t})
+
     try:
-        analysis = await _run_rag_analysis(fir_data, deps)
+        analysis = await _run_rag_analysis(fir_data, deps, thought_callback=_thought)
     except Exception as e:
         await send({"type": "error", "message": f"RAG analysis failed: {e}"})
         return
@@ -287,12 +310,17 @@ async def handle_full_analysis(
             )
     except Exception as e:
         print(f"[Mongo] save stage1: {e}")
+    await send({"type": "remove_thought", "stage": 1})
     await send({"type": "stage1_result", "stage": 1, "data": stage1_data})
     deps.audit("stage1_live_complete", session_id)
 
     # Stage 2
     await send_status(2, "Searching Indian Kanoon for real case law & predicting verdict...")
-    stage2_result = await _run_stage2(mapped_sections, fir_summary, deps)
+
+    async def _thought2(t):
+        await send({"type": "thought", "stage": 2, "message": t})
+
+    stage2_result = await _run_stage2(mapped_sections, fir_summary, deps, thought_callback=_thought2)
     ctx["sim_result"] = stage2_result
     deps.analysis_context[analysis_sid]["stage2"] = stage2_result
     try:
@@ -308,6 +336,7 @@ async def handle_full_analysis(
             await push_sessions_list(send, deps)
     except Exception as e:
         print(f"[Mongo] save stage2: {e}")
+    await send({"type": "remove_thought", "stage": 2})
     await send({"type": "stage2_result", "stage": 2, "data": stage2_result})
     deps.audit("stage2_complete", session_id)
 
@@ -384,6 +413,9 @@ async def handle_ask_question(
     deps.audit("question", session_id, question[:100])
     await send_status(3, "Synthesizing answer from your analysis...")
 
+    async def _thought(t):
+        await send({"type": "thought", "stage": 3, "message": t})
+
     fir_text = ac.get("fir", "") or ""
     stage1_result = ac.get("stage1") or {}
     stage2_result = ac.get("stage2") or {}
@@ -397,6 +429,7 @@ async def handle_ask_question(
             fir=fir_text,
             stage1_result=stage1_result,
             stage2_result=stage2_result,
+            callback=lambda t: asyncio.run_coroutine_threadsafe(_thought(t), loop)
         ),
     )
 
@@ -412,6 +445,7 @@ async def handle_ask_question(
     except Exception as e:
         print(f"[Mongo] update messages: {e}")
 
+    await send({"type": "remove_thought", "stage": 3})
     await send({
         "type": "qa_answer",
         "stage": 3,

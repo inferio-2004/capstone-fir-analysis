@@ -201,6 +201,27 @@
   to   { transform: rotate(360deg); }
 }
 
+/* Thought bubble */
+.chat-bubble.thought {
+  align-self: flex-start;
+  margin-left: 42px; /* Align with assistant content */
+  padding: 6px 12px;
+  background: rgba(var(--accent-rgb), 0.04);
+  border-left: 2px solid var(--accent);
+  border-radius: 4px;
+  font-size: 12px;
+  color: var(--text-muted);
+  font-style: italic;
+  max-width: 75%;
+  animation: fadeSlideIn 0.3s ease-out;
+}
+
+.thought-icon {
+  color: var(--accent);
+  flex-shrink: 0;
+  opacity: 0.7;
+}
+
 /* Scrollbar */
 .chat-area::-webkit-scrollbar {
   width: 6px;

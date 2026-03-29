@@ -79,6 +79,28 @@ export function useLexIR(url = 'ws://localhost:8000/ws') {
 
     function handleMsg(msg) {
       switch (msg.type) {
+        case 'thought': {
+          setChatMessages(prev => {
+            const last = prev[prev.length - 1];
+            if (last && last.role === 'thought' && last.meta.stage === msg.stage) {
+              return [...prev.slice(0, -1), { ...last, content: msg.message, timestamp: new Date() }];
+            }
+            return [...prev, {
+              id: Date.now() + Math.random(),
+              role: 'thought',
+              content: msg.message,
+              meta: { stage: msg.stage },
+              timestamp: new Date(),
+            }];
+          });
+          break;
+        }
+
+        case 'remove_thought': {
+          setChatMessages(prev => prev.filter(m => !(m.role === 'thought' && m.meta.stage === msg.stage)));
+          break;
+        }
+
         case 'status': {
           setStatus(msg.message);
           if (typeof msg.stage === 'number') setCurrentStage(msg.stage);

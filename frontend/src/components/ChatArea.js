@@ -1,5 +1,5 @@
 import React, { useRef, useEffect } from 'react';
-import { Bot, User, Info, AlertCircle, Loader2 } from 'lucide-react';
+import { Bot, User, Info, AlertCircle, Loader2, Lightbulb } from 'lucide-react';
 import './ChatArea.css';
 import Stage1Card from './Stage1Card';
 import Stage2Card from './Stage2Card';
@@ -42,6 +42,15 @@ export default function ChatArea({ messages, loading, loadedSession, pipelinePro
         return <Stage2Card key={msg.id} data={msg.meta.data} />;
       }
       return null;
+    }
+
+    if (msg.role === 'thought') {
+      return (
+        <div key={msg.id} className="chat-bubble thought">
+          <Lightbulb size={12} className="thought-icon" />
+          <span>{msg.content}</span>
+        </div>
+      );
     }
 
     if (msg.role === 'system') {

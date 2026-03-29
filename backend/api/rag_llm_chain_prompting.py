@@ -10,6 +10,7 @@ This module owns the StatuteRAGChainSystem class which:
   - enriches results with IPC/BNS mappings and statute extracts
 """
 
+import asyncio
 import json
 import os
 import re
@@ -362,10 +363,17 @@ Return ONLY valid JSON (no markdown, no code blocks):
     # ------------------------------------------------------------------
     #  Main analysis pipeline
     # ------------------------------------------------------------------
-    def analyze_fir_with_chains(self, fir_data: dict) -> dict:
+    def analyze_fir_with_chains(self, fir_data: dict, callback: callable = None) -> dict:
         print("\n" + "=" * 80)
         print("STATUTE-AWARE RAG WITH LANGCHAIN CHAIN PROMPTING")
         print("=" * 80)
+
+        async def _notify(thought: str):
+            if callback:
+                if asyncio.iscoroutinefunction(callback):
+                    await callback(thought)
+                else:
+                    callback(thought)
 
         case_facts = {
             "incident": fir_data.get("incident_description", ""),
@@ -374,15 +382,18 @@ Return ONLY valid JSON (no markdown, no code blocks):
         }
 
         # Step 0  — initial vector retrieval
+        if callback: asyncio.run(_notify("Retrieving initial statute candidates from Pinecone vector database..."))
         query_text = f"{case_facts['incident']} {case_facts['victim_impact']}"
         retrieved_chunks = self.retrieve_relevant_statutes(query_text, top_k=20)
         print(f"✓ Retrieved {len(retrieved_chunks)} statute chunks")
 
         # Step 1  — negative-rules filter
+        if callback: asyncio.run(_notify("Applying negative rule semantic filtering to exclude irrelevant sections..."))
         filtered_chunks = self.apply_negative_rules_filter(retrieved_chunks, case_facts)
         print(f"✓ Filtered to {len(filtered_chunks)} applicable chunks")
 
         # Step 2  — Chain 1: intent identification
+        if callback: asyncio.run(_notify("Analyzing case facts to identify primary criminal intent using LLM..."))
         intent_input = {
             "complainant": fir_data.get("complainant_name", "Unknown"),
             "accused": ", ".join(fir_data.get("accused_names", [])),
@@ -399,6 +410,7 @@ Return ONLY valid JSON (no markdown, no code blocks):
         print(f"✓ Primary Intent: {intent_result.get('primary_intent')}")
 
         # Step 3  — intent-driven second retrieval pass
+        if callback: asyncio.run(_notify(f"Performing targeted retrieval for intent: {intent_result.get('primary_intent')}..."))
         for iq in intent_to_retrieval_queries(
             intent_result.get("primary_intent", ""),
             intent_result.get("secondary_intents", []),
@@ -409,6 +421,7 @@ Return ONLY valid JSON (no markdown, no code blocks):
         print(f"✓ After intent-driven retrieval: {len(filtered_chunks)} unique chunks")
 
         # Step 4  — Chain 2: legal reasoning
+        if callback: asyncio.run(_notify("Synthesizing legal reasoning and mapping applicable IPC/BNS sections..."))
         statute_ctx = "\n".join(
             f"[{c['law']} {c['section_id']}] {c['section_text']}" for c in filtered_chunks[:20]
         )

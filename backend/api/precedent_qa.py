@@ -36,10 +36,15 @@ def _format_stage2_cases(stage2_result: dict) -> str:
     return "\n".join(lines)
 
 
-def answer_question(question: str, fir: str, stage1_result: dict, stage2_result: dict) -> str:
+def answer_question(question: str, fir: str, stage1_result: dict, stage2_result: dict, callback: callable = None) -> str:
     """
     Context-grounded Q&A using Stage 1 + Stage 2 results only (no new retrieval).
     """
+    if callback:
+        callback("Reviewing FIR details and identified legal sections from Stage 1...")
+        callback("Integrating relevant precedent cases and verdict predictions from Stage 2...")
+        callback("Synthesizing a grounded legal response based on the compiled context...")
+
     system_prompt = f"""You are a legal assistant analyzing a specific FIR case.
 
 FIR TEXT:

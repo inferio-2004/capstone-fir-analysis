@@ -81,6 +81,7 @@ def _ensure_rag_system():
     if _rag_system is None:
         print("[SERVER] Loading StatuteRAGChainSystem (Pinecone + LLM)...")
         from rag_llm_chain_prompting import StatuteRAGChainSystem
+        # The constructor handles caching of the embedding model via sentence_transformers
         _rag_system = StatuteRAGChainSystem()
         print("[SERVER] ✓ RAG system loaded")
     return _rag_system
