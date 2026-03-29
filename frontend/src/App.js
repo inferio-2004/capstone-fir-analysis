@@ -1,13 +1,79 @@
-import React, { useState, useCallback } from 'react';
-import { Download } from 'lucide-react';
+import React, { useState, useCallback, useEffect } from 'react';
+import { Download, Edit2, Check, X } from 'lucide-react';
+import { GoogleOAuthProvider } from '@react-oauth/google';
 import './App.css';
 import { useLexIR } from './hooks/useLexIR';
 import Sidebar from './components/Sidebar';
 import FIRForm from './components/FIRForm';
 import ChatArea from './components/ChatArea';
 import ChatInput from './components/ChatInput';
+import LoginPage from './components/LoginPage';
+
+const GOOGLE_CLIENT_ID = process.env.REACT_APP_GOOGLE_CLIENT_ID;
+
+function EditableTitle({ title, onSave, visible }) {
+  const [isEditing, setIsEditing] = useState(false);
+  const [val, setVal] = useState(title);
+
+  useEffect(() => { setVal(title); }, [title]);
+
+  if (!visible) return null;
+
+  if (isEditing) {
+    return (
+      <div className="top-title-edit" onMouseDown={e => e.stopPropagation()}>
+        <input 
+          autoFocus 
+          value={val} 
+          onChange={e => setVal(e.target.value)} 
+          onKeyDown={e => {
+            if (e.key === 'Enter') { onSave(val); setIsEditing(false); }
+            if (e.key === 'Escape') { setVal(title); setIsEditing(false); }
+          }}
+        />
+        <button 
+          onMouseDown={e => {
+            e.preventDefault(); // Prevent blur
+            onSave(val); 
+            setIsEditing(false); 
+          }} 
+          className="title-btn save"
+        >
+          <Check size={16} />
+        </button>
+        <button 
+          onMouseDown={e => {
+            e.preventDefault(); // Prevent blur
+            setIsEditing(false); 
+            setVal(title); 
+          }} 
+          className="title-btn cancel"
+        >
+          <X size={16} />
+        </button>
+      </div>
+    );
+  }
+
+  return (
+    <div className="top-title-display" onClick={() => setIsEditing(true)}>
+      <span>{title}</span>
+      <Edit2 size={14} className="edit-icon" />
+    </div>
+  );
+}
 
 function App() {
+  const [user, setUser] = useState(() => {
+    const savedUser = localStorage.getItem('lexir_user');
+    return savedUser ? JSON.parse(savedUser) : null;
+  });
+
+  const handleLogout = () => {
+    setUser(null);
+    localStorage.removeItem('lexir_user');
+  };
+
   const {
     connected, currentStage, loading, error,
     fir, stage1, stage2, chatMessages,
@@ -15,10 +81,32 @@ function App() {
     sessionId, isFIRExpanded, setIsFIRExpanded,
     startAnalysis, askQuestion, showCases, resetChat,
     loadSession, deleteSession, formResetKey,
-  } = useLexIR('ws://localhost:8000/ws');
+    chatTitle, renameSession,
+  } = useLexIR(`ws://localhost:8000/ws?user_email=${user?.email || ''}`);
 
   const hasAnalysis = !!(stage1 || stage2);
   const qaReady = currentStage >= 3;
+
+  const handleLoginSuccess = (userData) => {
+    setUser(userData);
+    localStorage.setItem('lexir_user', JSON.stringify(userData));
+    
+    // Notify backend about the user and get a secure session
+    fetch('http://localhost:8000/api/auth/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(userData),
+    })
+    .then(res => res.json())
+    .then(data => {
+      if (data.status === 'ok') {
+        console.log('Backend session established');
+        // Force refresh sessions list after backend sync
+        window.location.reload(); 
+      }
+    })
+    .catch(err => console.error('Error syncing user with backend:', err));
+  };
 
   /* ---- PDF download ---- */
   const [pdfLoading, setPdfLoading] = useState(false);
@@ -52,6 +140,14 @@ function App() {
     }
   }, [fir, stage1]);
 
+  if (!user) {
+    return (
+      <GoogleOAuthProvider clientId={GOOGLE_CLIENT_ID}>
+        <LoginPage onLoginSuccess={handleLoginSuccess} />
+      </GoogleOAuthProvider>
+    );
+  }
+
   return (
     <div className="app-layout">
       <Sidebar
@@ -65,17 +161,30 @@ function App() {
         onLoadSession={loadSession}
         onDeleteSession={deleteSession}
         onNewSession={resetChat}
+        user={user}
+        onLogout={handleLogout}
       />
 
       <main className="main-panel">
         {/* Top bar */}
         <header className="top-bar">
-          <h2>
-            {currentStage === 0 && 'Submit a Case'}
-            {currentStage === 1 && 'Stage 1 — FIR Analysis'}
-            {currentStage === 2 && 'Stage 2 — Similar Cases'}
-            {currentStage >= 3 && 'Stage 3 — Precedent Q&A'}
-          </h2>
+          <div className="top-bar-left">
+            <h2>
+              {currentStage === 0 && 'Submit a Case'}
+              {currentStage === 1 && 'Stage 1 — FIR Analysis'}
+              {currentStage === 2 && 'Stage 2 — Similar Cases'}
+              {currentStage >= 3 && 'Stage 3 — Precedent Q&A'}
+            </h2>
+          </div>
+
+          <div className="top-bar-center">
+            <EditableTitle 
+              title={chatTitle} 
+              onSave={(newTitle) => renameSession(sessionId || loadedSession?.sessionId, newTitle)}
+              visible={!!(sessionId || loadedSession?.sessionId)}
+            />
+          </div>
+
           <div className="top-bar-actions">
             {stage1 && (
               <button
@@ -110,6 +219,9 @@ function App() {
           loading={loading}
           loadedSession={loadedSession}
           pipelineProgress={pipelineProgress}
+          chatTitle={chatTitle}
+          renameSession={renameSession}
+          sessionId={sessionId}
         />
 
         {/* Chat input (shown once Q&A stage is reached) */}

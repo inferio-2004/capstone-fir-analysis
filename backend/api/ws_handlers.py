@@ -43,13 +43,20 @@ SendFn = Callable[[dict], Awaitable[None]]
 StatusFn = Callable[[int, str], Awaitable[None]]
 
 
-def _build_sessions_list_payload(deps: ServerDeps) -> dict:
+def _build_sessions_list_payload(deps: ServerDeps, user_email: str = None) -> dict:
     """Build { type, sessions } for list_sessions and push refreshes."""
     if deps.mongo_sessions_col is None:
         return {"type": "sessions_list", "sessions": []}
+    
+    match_stage = {}
+    if user_email:
+        match_stage = {"user_email": user_email}
+
     pipeline = [
+        {"$match": match_stage},
         {"$project": {
             "_id": 1,
+            "title": 1,
             "fir_preview": 1,
             "created_at": 1,
             "status": 1,
@@ -61,6 +68,7 @@ def _build_sessions_list_payload(deps: ServerDeps) -> dict:
     out = [
         {
             "id": r["_id"],
+            "title": r.get("title") or "Untitled Analysis",
             "fir_preview": r.get("fir_preview", ""),
             "created_at": r.get("created_at", ""),
             "message_count": r.get("message_count", 0),
@@ -71,11 +79,34 @@ def _build_sessions_list_payload(deps: ServerDeps) -> dict:
     return {"type": "sessions_list", "sessions": out}
 
 
-async def push_sessions_list(send: SendFn, deps: ServerDeps) -> None:
+async def push_sessions_list(send: SendFn, deps: ServerDeps, user_email: str = None) -> None:
     try:
-        await send(_build_sessions_list_payload(deps))
+        await send(_build_sessions_list_payload(deps, user_email))
     except Exception as e:
         print(f"[Mongo] push_sessions_list: {e}")
+
+
+async def handle_rename_session(
+    msg: dict, session_id: str,
+    send: SendFn, send_status: StatusFn,
+    deps: ServerDeps,
+):
+    sid = msg.get("session_id")
+    new_title = msg.get("title", "").strip()
+    user_email = msg.get("user_email")
+    if not sid or not new_title:
+        return
+
+    try:
+        if deps.mongo_sessions_col is not None:
+            deps.mongo_sessions_col.update_one(
+                {"_id": sid},
+                {"$set": {"title": new_title}}
+            )
+            await send({"type": "session_renamed", "session_id": sid, "title": new_title})
+            await push_sessions_list(send, deps, user_email)
+    except Exception as e:
+        print(f"[Mongo] rename_session failed: {e}")
 
 
 # ---------------------------------------------------------------------------
@@ -131,6 +162,7 @@ async def handle_start_analysis(
     deps: ServerDeps,
 ):
     ctx = deps.sessions[session_id]
+    user_email = msg.get("user_email")
 
     analysis_sid = str(uuid.uuid4())
     ctx["analysis_session_id"] = analysis_sid
@@ -146,11 +178,18 @@ async def handle_start_analysis(
     ctx["fir"] = fir_data
     inc = (fir_data.get("incident_description", "") or "") if fir_data else ""
     deps.analysis_context[analysis_sid]["fir"] = inc
+
+    # Generate initial title using LLM
+    from intent_queries import generate_brief_title
+    title = generate_brief_title(inc)
+
     try:
         if deps.mongo_sessions_col is not None:
             deps.mongo_sessions_col.insert_one({
                 "_id": analysis_sid,
+                "user_email": user_email,
                 "fir": fir_data,
+                "title": title,
                 "fir_preview": inc[:100] or "Analyzing…",
                 "created_at": datetime.now(timezone.utc).isoformat(),
                 "status": "pending",
@@ -158,11 +197,11 @@ async def handle_start_analysis(
                 "stage1_data": None,
                 "stage2_data": None,
             })
-            await push_sessions_list(send, deps)
+            await push_sessions_list(send, deps, user_email)
     except Exception as e:
         print(f"[Mongo] insert session: {e}")
 
-    await send({"type": "fir_loaded", "stage": 1, "fir": fir_data, "session_id": analysis_sid})
+    await send({"type": "fir_loaded", "stage": 1, "fir": fir_data, "session_id": analysis_sid, "title": title})
     deps.audit("fir_loaded", session_id, fir_data.get("fir_id", ""))
 
     # 2. Stage 1
@@ -232,7 +271,7 @@ async def handle_start_analysis(
                     "fir_preview": inc[:100] or deps.analysis_context[analysis_sid].get("fir", "")[:100],
                 }},
             )
-            await push_sessions_list(send, deps)
+            await push_sessions_list(send, deps, user_email)
     except Exception as e:
         print(f"[Mongo] save stage2: {e}")
     await send({"type": "remove_thought", "stage": 2})
@@ -264,11 +303,17 @@ async def handle_full_analysis(
     ctx["fir"] = fir_data
     inc = (fir_data.get("incident_description", "") or "") if fir_data else ""
     deps.analysis_context[analysis_sid]["fir"] = inc
+
+    # Generate initial title using LLM
+    from intent_queries import generate_brief_title
+    title = generate_brief_title(inc)
+
     try:
         if deps.mongo_sessions_col is not None:
             deps.mongo_sessions_col.insert_one({
                 "_id": analysis_sid,
                 "fir": fir_data,
+                "title": title,
                 "fir_preview": inc[:100] or "Analyzing…",
                 "created_at": datetime.now(timezone.utc).isoformat(),
                 "status": "pending",
@@ -280,7 +325,7 @@ async def handle_full_analysis(
     except Exception as e:
         print(f"[Mongo] insert session: {e}")
 
-    await send({"type": "fir_loaded", "stage": 1, "fir": fir_data, "session_id": analysis_sid})
+    await send({"type": "fir_loaded", "stage": 1, "fir": fir_data, "session_id": analysis_sid, "title": title})
 
     await send_status(1, "Running full RAG chain analysis (Pinecone + LLM)... This may take 30-60 seconds.")
 
@@ -468,9 +513,10 @@ async def handle_list_sessions(
     send: SendFn, send_status: StatusFn,
     deps: ServerDeps,
 ):
-    del msg, session_id, send_status
+    del session_id, send_status
+    user_email = msg.get("user_email")
     try:
-        await send(_build_sessions_list_payload(deps))
+        await send(_build_sessions_list_payload(deps, user_email))
     except Exception as e:
         print(f"[Mongo] list_sessions: {e}")
         await send({"type": "sessions_list", "sessions": []})
@@ -525,6 +571,7 @@ async def handle_get_history(
             "type": "history",
             "session_id": sid,
             "fir": doc.get("fir"),
+            "title": doc.get("title", ""),
             "stage1_data": doc.get("stage1_data"),
             "stage2_data": doc.get("stage2_data"),
             "messages": doc.get("messages") or [],
@@ -550,11 +597,13 @@ async def handle_clear_session(
 ):
     del send_status
     sid = msg.get("session_id")
+    user_email = msg.get("user_email")
     try:
         if deps.mongo_sessions_col is not None and sid:
             deps.mongo_sessions_col.delete_one({"_id": sid})
         deps.analysis_context.pop(sid, None)
         await send({"type": "session_cleared", "session_id": sid, "success": True})
+        await push_sessions_list(send, deps, user_email)
     except Exception as e:
         print(f"[Mongo] clear_session: {e}")
         await send({"type": "error", "message": f"Could not clear session: {e}"})

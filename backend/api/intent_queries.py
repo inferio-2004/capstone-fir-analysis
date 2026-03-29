@@ -52,3 +52,24 @@ def intent_to_retrieval_queries(
         queries.append(f"{primary_intent} Indian Penal Code section")
 
     return list(dict.fromkeys(queries))  # deduplicate, preserve order
+
+
+def generate_brief_title(incident_text: str) -> str:
+    """Generate a very short (2-4 words) title for the FIR case using LLM."""
+    from model_config import groq_chat_with_fallback
+    from groq import Groq
+    import os
+
+    client = Groq(api_key=os.environ.get("GROQ_API_KEY"))
+    prompt = f"Create a very brief, meaningful 2-4 word title for this legal case description: {incident_text[:500]}. Respond ONLY with the title."
+    
+    try:
+        title = groq_chat_with_fallback(
+            client,
+            role="summarisation",
+            messages=[{"role": "user", "content": prompt}],
+            max_tokens=20
+        )
+        return title.strip().strip('"')
+    except Exception:
+        return (incident_text[:50].strip() or "New Analysis") + "..."

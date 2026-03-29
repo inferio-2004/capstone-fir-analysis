@@ -1,5 +1,5 @@
-import React, { useRef, useEffect } from 'react';
-import { Bot, User, Info, AlertCircle, Loader2, Lightbulb } from 'lucide-react';
+import React, { useRef, useEffect, useState } from 'react';
+import { Bot, User, Info, AlertCircle, Loader2, Lightbulb, Edit2, Check, X } from 'lucide-react';
 import './ChatArea.css';
 import Stage1Card from './Stage1Card';
 import Stage2Card from './Stage2Card';
@@ -23,12 +23,33 @@ function PipelineProgress({ progress }) {
     </div>
   );
 }
-export default function ChatArea({ messages, loading, loadedSession, pipelineProgress }) {
+export default function ChatArea({ 
+  messages, 
+  loading, 
+  loadedSession, 
+  pipelineProgress, 
+  chatTitle, 
+  renameSession,
+  sessionId 
+}) {
   const bottomRef = useRef(null);
+  const [isEditingTitle, setIsEditingTitle] = useState(false);
+  const [editedTitle, setEditedTitle] = useState(chatTitle);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages, loading, loadedSession, pipelineProgress]);
+
+  useEffect(() => {
+    setEditedTitle(chatTitle);
+  }, [chatTitle]);
+
+  const handleSaveTitle = () => {
+    if (editedTitle.trim() && editedTitle !== chatTitle) {
+      renameSession(sessionId || loadedSession?.sessionId, editedTitle);
+    }
+    setIsEditingTitle(false);
+  };
 
   const showLiveChat = !loadedSession;
   const qaPairs = loadedSession?.messages || [];
@@ -105,7 +126,7 @@ export default function ChatArea({ messages, loading, loadedSession, pipelinePro
     <div className="chat-area">
       {loadedSession && (
         <>
-          <div className="history-separator">— Loaded Session —</div>
+          <div className="history-separator">— Loaded History —</div>
           {loadedSession.stage1 && (
             <Stage1Card key="h-stage1" data={loadedSession.stage1} />
           )}
@@ -123,10 +144,11 @@ export default function ChatArea({ messages, loading, loadedSession, pipelinePro
       {showLiveChat && (
         <>
           {beforeFirstStage.map((msg) => renderMessage(msg))}
-          {fromFirstStage.map((msg) => renderMessage(msg))}
+          {fromFirstStage.filter(m => m.role !== 'thought').map((msg) => renderMessage(msg))}
           {pipelineProgress && (
             <PipelineProgress progress={pipelineProgress} />
           )}
+          {fromFirstStage.filter(m => m.role === 'thought').map((msg) => renderMessage(msg))}
         </>
       )}
 

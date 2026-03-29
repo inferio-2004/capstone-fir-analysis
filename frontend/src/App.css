@@ -85,10 +85,96 @@ body {
   text-overflow: ellipsis;
   white-space: nowrap;
 }
+
+/* Header Title Styles */
+.top-bar-left {
+  flex: 1;
+}
+
 .top-bar-actions {
+  flex: 1;
   display: flex;
+  justify-content: flex-end;
   align-items: center;
   gap: 12px;
+}
+
+.top-bar-center {
+  flex: 2;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.top-title-display {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  padding: 4px 12px;
+  border-radius: 6px;
+  transition: background 0.2s;
+  max-width: 400px;
+}
+
+.top-title-display:hover {
+  background: var(--bg-hover);
+}
+
+.top-title-display span {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.edit-icon {
+  color: var(--text-muted);
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+
+.top-title-display:hover .edit-icon {
+  opacity: 1;
+}
+
+.top-title-edit {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  max-width: 400px;
+}
+
+.top-title-edit input {
+  flex: 1;
+  background: var(--bg-card);
+  border: 1px solid var(--accent);
+  border-radius: 4px;
+  padding: 4px 8px;
+  color: var(--text-primary);
+  font-size: 16px;
+  outline: none;
+}
+
+.title-btn {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  transition: background 0.2s;
+}
+
+.title-btn.save { color: var(--green); }
+.title-btn.cancel { color: var(--red); }
+
+.title-btn:hover {
+  background: var(--bg-hover);
 }
 
 /* PDF download button */

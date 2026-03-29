@@ -38,6 +38,8 @@ from ws_handlers import (                                          # noqa: E402
     handle_clear_session,
 )
 
+from pydantic import BaseModel
+
 try:
     from pymongo import MongoClient
 except ImportError:
@@ -45,12 +47,21 @@ except ImportError:
 
 mongo_client = None
 sessions_col = None
+users_col = None
 try:
     if MongoClient is not None:
         mongo_client = MongoClient("mongodb://localhost:27017")
-        sessions_col = mongo_client["lexir"]["chat_sessions"]
+        db = mongo_client["lexir"]
+        sessions_col = db["chat_sessions"]
+        users_col = db["users"]
 except Exception as e:
     print(f"[SERVER] MongoDB unavailable: {e}")
+
+class UserLogin(BaseModel):
+    token: str
+    name: str
+    email: str
+    picture: str
 
 # ---------------------------------------------------------------------------
 #  FastAPI App
@@ -128,6 +139,28 @@ async def startup():
 # ---------------------------------------------------------------------------
 #  REST Endpoints
 # ---------------------------------------------------------------------------
+@app.post("/api/auth/login")
+async def api_login(user: UserLogin):
+    if users_col is None:
+        raise HTTPException(status_code=503, detail="Database unavailable")
+    
+    try:
+        # Check if user exists, if not create/update
+        users_col.update_one(
+            {"email": user.email},
+            {"$set": {
+                "name": user.name,
+                "picture": user.picture,
+                "last_login": datetime.now(timezone.utc).isoformat()
+            }},
+            upsert=True
+        )
+        return {"status": "ok"}
+    except Exception as e:
+        print(f"[SERVER] Auth failed: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
 @app.get("/health")
 async def health():
     return {
@@ -138,11 +171,17 @@ async def health():
 
 
 @app.get("/api/sessions")
-async def api_list_sessions():
+async def api_list_sessions(user_email: str = None):
     try:
         if sessions_col is None:
             return {"sessions": []}
+        
+        match_stage = {}
+        if user_email:
+            match_stage = {"user_email": user_email}
+            
         pipeline = [
+            {"$match": match_stage},
             {"$project": {
                 "_id": 1,
                 "fir_preview": 1,
@@ -234,6 +273,7 @@ async def upload_fir_image(file: UploadFile = File(...)):
 @app.websocket("/ws")
 async def websocket_endpoint(ws: WebSocket):
     await ws.accept()
+    user_email = ws.query_params.get("user_email")
     session_id = uuid.uuid4().hex[:12]
     _deps.sessions[session_id] = {
         "fir": None, "analysis": None, "sim_result": None,
@@ -261,6 +301,7 @@ async def websocket_endpoint(ws: WebSocket):
             msg_type = msg.get("type", "")
 
             if msg_type == "start_analysis":
+                msg["user_email"] = user_email
                 await handle_start_analysis(msg, session_id, send, send_status, _deps)
             elif msg_type == "run_full_analysis":
                 await handle_full_analysis(msg, session_id, send, send_status, _deps)
@@ -272,6 +313,9 @@ async def websocket_endpoint(ws: WebSocket):
                 await handle_get_history(msg, session_id, send, send_status, _deps)
             elif msg_type == "clear_session":
                 await handle_clear_session(msg, session_id, send, send_status, _deps)
+            elif msg_type == "rename_session":
+                from ws_handlers import handle_rename_session
+                await handle_rename_session(msg, session_id, send, send_status, _deps)
             elif msg_type in ("search_kanoon", "show_cases"):
                 ctx = _deps.sessions[session_id]
                 if ctx.get("sim_result"):

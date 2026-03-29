@@ -30,6 +30,7 @@ export function useLexIR(url = 'ws://localhost:8000/ws') {
   const [sessions, setSessions] = useState([]);
   const [loadedSession, setLoadedSession] = useState(null);
   const [pipelineProgress, setPipelineProgress] = useState(null);
+  const [chatTitle, setChatTitle] = useState('New Analysis');
   /** Increment to remount / reset FIRForm (Issue 2). */
   const [formResetKey, setFormResetKey] = useState(0);
   /** Default to expanded for new sessions. */
@@ -58,7 +59,10 @@ export function useLexIR(url = 'ws://localhost:8000/ws') {
         setConnected(true);
         setError(null);
         try {
-          ws.send(JSON.stringify({ type: 'list_sessions' }));
+          // Extract user_email from current URL to avoid passing as arg if possible
+          const urlParams = new URLSearchParams(new URL(url).search);
+          const email = urlParams.get('user_email');
+          ws.send(JSON.stringify({ type: 'list_sessions', user_email: email }));
         } catch { /* ignore */ }
       };
 
@@ -116,6 +120,7 @@ export function useLexIR(url = 'ws://localhost:8000/ws') {
         case 'fir_loaded':
           setFir(msg.fir);
           if (msg.session_id) setSessionId(msg.session_id);
+          if (msg.title) setChatTitle(msg.title);
           break;
 
         case 'stage1_result':
@@ -171,11 +176,13 @@ export function useLexIR(url = 'ws://localhost:8000/ws') {
           setLoadedSession({
             sessionId: msg.session_id,
             fir: msg.fir,
+            title: msg.title,
             stage1: msg.stage1_data,
             stage2: msg.stage2_data,
             messages: msg.messages || [],
           });
           if (msg.session_id) setSessionId(msg.session_id);
+          if (msg.title) setChatTitle(msg.title);
           setChatMessages([]);
           setPipelineProgress(null);
           setStage1(null);
@@ -191,6 +198,7 @@ export function useLexIR(url = 'ws://localhost:8000/ws') {
           if (loadedSessionRef.current?.sessionId === clearedId) {
             setLoadedSession(null);
             setChatMessages([]);
+            setChatTitle('New Analysis');
             setStage1(null);
             setStage2(null);
             setFir(null);
@@ -200,11 +208,20 @@ export function useLexIR(url = 'ws://localhost:8000/ws') {
             setIsFIRExpanded(false);
             setFormResetKey(k => k + 1);
           }
-          try {
-            wsRef.current?.send(JSON.stringify({ type: 'list_sessions' }));
-          } catch { /* ignore */ }
           break;
         }
+
+        case 'session_renamed':
+          if (loadedSessionRef.current?.sessionId === msg.session_id || sessionId === msg.session_id) {
+            setChatTitle(msg.title);
+          }
+          // Refresh session list to update titles in Sidebar
+          try {
+            const urlParams = new URLSearchParams(new URL(url).search);
+            const email = urlParams.get('user_email');
+            wsRef.current?.send(JSON.stringify({ type: 'list_sessions', user_email: email }));
+          } catch { /* ignore */ }
+          break;
 
         case 'error':
           setError(msg.message);
@@ -241,7 +258,9 @@ export function useLexIR(url = 'ws://localhost:8000/ws') {
     setLoadedSession(null);
     setIsFIRExpanded(false);
     setPipelineProgress(initialPipeline());
-    const payload = { type: 'start_analysis' };
+    const urlParams = new URLSearchParams(new URL(url).search);
+    const email = urlParams.get('user_email');
+    const payload = { type: 'start_analysis', user_email: email };
     if (firData) payload.fir = firData;
     addChat('user',
       firData
@@ -250,7 +269,7 @@ export function useLexIR(url = 'ws://localhost:8000/ws') {
       { isFirSubmit: true },
     );
     send(payload);
-  }, [send, addChat]);
+  }, [send, addChat, url]);
 
   const askQuestion = useCallback((question) => {
     if (!question.trim()) return;
@@ -293,6 +312,7 @@ export function useLexIR(url = 'ws://localhost:8000/ws') {
     setStatus('');
     setSessionId(null);
     setLoadedSession(null);
+    setChatTitle('New Analysis');
     setIsFIRExpanded(true);
     setPipelineProgress(null);
     setFormResetKey(k => k + 1);
@@ -303,6 +323,7 @@ export function useLexIR(url = 'ws://localhost:8000/ws') {
     if (loadedSessionRef.current?.sessionId === id) {
       setLoadedSession(null);
       setChatMessages([]);
+      setChatTitle('New Analysis');
       setStage1(null);
       setStage2(null);
       setFir(null);
@@ -312,8 +333,20 @@ export function useLexIR(url = 'ws://localhost:8000/ws') {
       setPipelineProgress(null);
       setFormResetKey(k => k + 1);
     }
-    send({ type: 'clear_session', session_id: id });
-  }, [send]);
+    const urlParams = new URLSearchParams(new URL(url).search);
+    const email = urlParams.get('user_email');
+    send({ type: 'clear_session', session_id: id, user_email: email });
+  }, [send, url]);
+
+  const renameSession = useCallback((id, title) => {
+    setChatTitle(title);
+    if (loadedSessionRef.current?.sessionId === id) {
+      setLoadedSession(prev => ({ ...prev, title }));
+    }
+    const urlParams = new URLSearchParams(new URL(url).search);
+    const email = urlParams.get('user_email');
+    send({ type: 'rename_session', session_id: id, title, user_email: email });
+  }, [send, url]);
 
   return {
     connected,
@@ -326,6 +359,7 @@ export function useLexIR(url = 'ws://localhost:8000/ws') {
     stage2,
     qaAnswers,
     chatMessages,
+    chatTitle,
     sessionId,
     sessions,
     loadedSession,
@@ -339,5 +373,6 @@ export function useLexIR(url = 'ws://localhost:8000/ws') {
     resetChat,
     loadSession,
     deleteSession,
+    renameSession,
   };
 }

@@ -19,6 +19,8 @@ export default function Sidebar({
   activeSessionId,
   onLoadSession,
   onDeleteSession,
+  user,
+  onLogout,
 }) {
   return (
     <aside className="sidebar">
@@ -70,7 +72,7 @@ export default function Sidebar({
                         Analyzing…
                       </span>
                     ) : (
-                      (s.fir_preview || '').slice(0, 60)
+                      s.title || (s.fir_preview || '').slice(0, 60)
                     )}
                   </span>
                   <span className="history-meta">{formatSessionTime(s.created_at)}</span>
@@ -93,6 +95,33 @@ export default function Sidebar({
         </div>
       </div>
 
+      {/* User info & Logout */}
+      {user && (
+        <div className="sidebar-footer">
+          <div className="user-info">
+            <div className="avatar-container">
+              <img 
+                src={user.picture} 
+                alt={user.name} 
+                className="user-avatar"
+                referrerPolicy="no-referrer"
+                onError={(e) => {
+                  console.error("Avatar failed to load", e);
+                  e.target.style.display = 'none';
+                  e.target.nextSibling.style.display = 'flex';
+                }}
+              />
+              <div className="avatar-fallback" style={{ display: 'none' }}>
+                {user.name?.charAt(0).toUpperCase()}
+              </div>
+            </div>
+            <div className="user-details">
+              <span className="user-name">{user.name}</span>
+              <button className="logout-btn" onClick={onLogout}>Logout</button>
+            </div>
+          </div>
+        </div>
+      )}
     </aside>
   );
 }
