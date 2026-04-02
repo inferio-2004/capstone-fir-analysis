@@ -18,8 +18,10 @@ function PipelineProgress({ progress }) {
 
   return (
     <div className="chat-bubble system loading-bubble" aria-live="polite">
-      <Loader2 size={16} className="spin" />
-      <span>{label}</span>
+      <div className="loading-row">
+        <Loader2 size={16} className="spin" />
+        <span>{label}</span>
+      </div>
     </div>
   );
 }
@@ -143,12 +145,12 @@ export default function ChatArea({
 
       {showLiveChat && (
         <>
-          {beforeFirstStage.map((msg) => renderMessage(msg))}
+          {beforeFirstStage.filter(m => m.role !== 'thought').map((msg) => renderMessage(msg))}
           {fromFirstStage.filter(m => m.role !== 'thought').map((msg) => renderMessage(msg))}
           {pipelineProgress && (
             <PipelineProgress progress={pipelineProgress} />
           )}
-          {fromFirstStage.filter(m => m.role === 'thought').map((msg) => renderMessage(msg))}
+          {messages.filter(m => m.role === 'thought').map((msg) => renderMessage(msg))}
         </>
       )}
 

@@ -4,25 +4,25 @@
 
 /* ---------- CSS Variables (Dark theme) ---------- */
 :root {
-  --bg-primary:    #0f1117;
-  --bg-secondary:  #1a1d27;
-  --bg-card:       #21242f;
-  --bg-input:      #2a2d3a;
-  --bg-hover:      #2e3142;
+  --bg-primary:    #08111d;
+  --bg-secondary:  #111b2b;
+  --bg-card:       #162132;
+  --bg-input:      #1e2b40;
+  --bg-hover:      #24334c;
 
-  --text-primary:  #e4e6eb;
-  --text-secondary:#9ca3b0;
-  --text-muted:    #6b7280;
+  --text-primary:  #edf2f7;
+  --text-secondary:#c1ccdc;
+  --text-muted:    #8d9ab0;
 
-  --accent:        #6366f1;
-  --accent-hover:  #818cf8;
-  --accent-dim:    rgba(99, 102, 241, 0.15);
+  --accent:        #d4a65e;
+  --accent-hover:  #e5bb79;
+  --accent-dim:    rgba(212, 166, 94, 0.16);
 
   --green:         #22c55e;
   --yellow:        #f59e0b;
   --red:           #ef4444;
 
-  --border:        #2e3142;
+  --border:        #26344b;
   --radius:        10px;
   --radius-sm:     6px;
 
