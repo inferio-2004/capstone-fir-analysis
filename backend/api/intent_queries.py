@@ -40,6 +40,7 @@ def intent_to_retrieval_queries(
     """
     queries: list[str] = []
     intent_lower = primary_intent.lower() if primary_intent else ""
+
     all_intents = [intent_lower] + [s.lower() for s in (secondary_intents or [])]
 
     for keyword, qs in INTENT_QUERY_MAP.items():

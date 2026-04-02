@@ -48,6 +48,8 @@ from groq_prompts import (
 
     build_fact_query,
 
+    build_broad_fact_query,
+
     summarize_case_with_llm,
 
 )
@@ -315,9 +317,9 @@ def _is_actual_case(title: str, docsource: str) -> bool:
 
 # ---------------------------------------------------------------------------
 
-def search_kanoon(query: str, page: int = 0) -> dict:
+def search_kanoon(query: str, page: int = 0, maxpages: int = 1) -> dict:
 
-    ck = cache_key(f"search:{query}:p{page}")
+    ck = cache_key(f"search:{query}:p{page}:m{maxpages}")
 
     cached = load_cache(ck)
 
@@ -331,13 +333,14 @@ def search_kanoon(query: str, page: int = 0) -> dict:
             "pagenum": page,
             "doctypes": "judgments",
             "fromdate": "01-01-2000",
-            "sortby": "mostrecent"
+            "sortby": "mostrecent",
+            "maxpages": maxpages,
         }
         
         import urllib.parse
         full_url = f"{KANOON_BASE_URL}/search/?{urllib.parse.urlencode(data_payload)}"
         print(f"\n[Kanoon API] RAW URL: {full_url}")
-        print(f"  Filter:   doctypes=judgments, fromdate=01-01-2000, sortby=mostrecent")
+        print(f"  Filter:   doctypes=judgments, fromdate=01-01-2000, sortby=mostrecent, maxpages={maxpages}")
         
         resp = requests.post(f"{KANOON_BASE_URL}/search/", headers=_headers(), data=data_payload, timeout=15)
 
@@ -350,7 +353,6 @@ def search_kanoon(query: str, page: int = 0) -> dict:
         save_cache(ck, data)
 
         return data
-
     except requests.exceptions.HTTPError as e:
 
         return {"error": f"HTTP {e.response.status_code}: {e.response.text[:200]}", "docs": []}
@@ -410,6 +412,7 @@ def search_and_analyze(
     max_per_section: int = MAX_PER_SECTION,
 
     max_total: int = MAX_TOTAL_CASES,
+    applicable_statutes: list[dict] | None = None,
     callback: callable = None,
 
 ) -> dict:
@@ -538,6 +541,7 @@ def search_and_analyze(
     # Strategy 1: LLM-crafted fact+section query
 
     fact_query = build_fact_query(fir_summary, ipc_sections) if fir_summary else ""
+    broad_fact_query = build_broad_fact_query(fir_summary, ipc_sections) if fir_summary else ""
 
     if fact_query:
 
@@ -550,17 +554,37 @@ def search_and_analyze(
 
         _add_cases_from_result(result, "Fact-match", min(3, max_total))
 
+        if len(all_cases) < 2:
+            page_2_result = search_kanoon(fact_query, page=1, maxpages=1)
+            api_calls += 1
+            _add_cases_from_result(page_2_result, "Fact-match", min(2, max_total - len(all_cases)))
+
+    if len(all_cases) < 2 and broad_fact_query:
+        if callback: callback(f"Broadening Indian Kanoon search with crime-cluster query: {broad_fact_query}")
+        print(f"\n[KANOON SEARCH QUERY 2 - Broader]\n  Query: \"{broad_fact_query}\"")
+
+        broad_result = search_kanoon(broad_fact_query)
+        api_calls += 1
+        _add_cases_from_result(broad_result, "Broad-match", min(3, max_total - len(all_cases)))
+
+        if len(all_cases) < 2:
+            broad_page_2 = search_kanoon(broad_fact_query, page=1, maxpages=1)
+            api_calls += 1
+            _add_cases_from_result(broad_page_2, "Broad-match", min(2, max_total - len(all_cases)))
 
 
-    # Strategy 2: Section + "conviction accused"
 
-    for i, sec in enumerate(ipc_sections, 1):
+    # Strategy 2: Section-focused fallback using only the primary IPC section
+
+    primary_sections = ipc_sections[:1]
+
+    for i, sec in enumerate(primary_sections, 1):
 
         if len(all_cases) >= max_total:
 
             break
 
-        query = f"Section {sec} IPC accused conviction sentence"
+        query = f'"Section {sec} IPC" ANDD (conviction ORR sentence ORR judgment)'
 
         result = search_kanoon(query)
 
@@ -574,13 +598,13 @@ def search_and_analyze(
 
     if len(all_cases) < 2:
 
-        for sec in ipc_sections:
+        for sec in primary_sections:
 
             if len(all_cases) >= max_total:
 
                 break
 
-            query = f"Section {sec} IPC guilty punishment"
+            query = f'"Section {sec} IPC" ANDD (guilty ORR punishment ORR conviction)'
 
             result = search_kanoon(query)
 
@@ -590,13 +614,6 @@ def search_and_analyze(
 
 
 
-    if not all_cases:
-
-        return {"status": "no_results", "sections_searched": [f"IPC {s}" for s in ipc_sections],
-
-                "cases": [], "verdict_prediction": None, "api_calls_used": api_calls, "error": None}
-
-    
     # --- FILTERING LOGIC ---
     print(f"\n[Kanoon] Filtering {len(all_cases)} results...")
     
@@ -628,6 +645,8 @@ def search_and_analyze(
     if callback: callback(f"Found {len(all_cases)} potential cases. Fetching and summarizing judgment texts...")
     print(f"[Kanoon] Fetching & summarizing {len(all_cases)} cases...")
 
+    summarized_cases: list[dict] = []
+
     for case in all_cases:
 
         tid = case["tid"]
@@ -648,7 +667,26 @@ def search_and_analyze(
 
         prepped_text = preprocess_judgment(doc_text)
 
-        case["summary"] = summarize_case_with_llm(prepped_text)
+        summary_result = summarize_case_with_llm(
+            prepped_text,
+            case_title=case["title"],
+            fir_summary=fir_summary,
+            ipc_sections=[f"IPC {s}" for s in ipc_sections],
+            return_metadata=True,
+        )
+
+        if summary_result.get("summary"):
+            case["summary"] = summary_result["summary"]
+            case["relevance_reason"] = summary_result.get("reason", "")
+            case["relevance_score"] = int(summary_result.get("relevance_score", 0) or 0)
+            case["relevant"] = bool(summary_result.get("relevant", False))
+            summarized_cases.append(case)
+
+    relevant_cases = [c for c in summarized_cases if c.get("relevant")]
+    if relevant_cases:
+        final_cases = sorted(relevant_cases, key=lambda c: c.get("relevance_score", 0), reverse=True)
+    else:
+        final_cases = sorted(summarized_cases, key=lambda c: c.get("relevance_score", 0), reverse=True)
 
 
 
@@ -657,7 +695,7 @@ def search_and_analyze(
     if callback: callback("Synthesizing verdict prediction based on retrieved case law...")
     print("[Kanoon] Predicting verdict based on precedents...")
 
-    cases_with_summaries = [c for c in all_cases if c.get("summary")]
+    cases_with_summaries = [c for c in final_cases if c.get("summary")]
 
     verdict = predict_verdict(
 
@@ -665,7 +703,7 @@ def search_and_analyze(
 
         ipc_sections=[f"IPC {s}" for s in ipc_sections],
 
-        case_summaries=cases_with_summaries or all_cases,
+        case_summaries=cases_with_summaries or final_cases,
 
     )
 
@@ -684,7 +722,9 @@ def search_and_analyze(
 
         verdict=verdict,
 
-        case_summaries=cases_with_summaries or all_cases,
+        case_summaries=cases_with_summaries or final_cases,
+
+        applicable_statutes=applicable_statutes,
 
     )
 
@@ -692,11 +732,11 @@ def search_and_analyze(
 
     return {
 
-        "status": "success" if cases_with_summaries else "partial",
+        "status": "success" if relevant_cases else "partial",
 
         "sections_searched": [f"IPC {s}" for s in ipc_sections],
 
-        "cases": all_cases,
+        "cases": final_cases,
 
         "verdict_prediction": verdict,
 

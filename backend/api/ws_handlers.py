@@ -17,7 +17,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Callable, Awaitable, Any, Optional
 
-from formatters import format_stage1, extract_mapped_sections
+from formatters import format_stage1, extract_mapped_sections, extract_primary_sections
 from groq_prompts import rank_section_influence
 from precedent_qa import answer_question
 
@@ -122,7 +122,7 @@ def _load_fir(msg: dict, send_status, is_default_ok: bool = True) -> dict | None
     return fir_data
 
 
-async def _run_stage2(mapped_sections, fir_summary, deps: ServerDeps, thought_callback: Callable = None):
+async def _run_stage2(mapped_sections, fir_summary, deps: ServerDeps, applicable_statutes=None, thought_callback: Callable = None):
     """Run Indian Kanoon search + verdict prediction (Stage 2) in a thread."""
     loop = asyncio.get_event_loop()
 
@@ -136,6 +136,7 @@ async def _run_stage2(mapped_sections, fir_summary, deps: ServerDeps, thought_ca
             lambda: deps.kanoon_searcher(
                 mapped_sections=mapped_sections,
                 fir_summary=fir_summary,
+                applicable_statutes=applicable_statutes,
                 callback=_sync_callback
             ),
         )
@@ -234,7 +235,8 @@ async def handle_start_analysis(
     ctx["analysis"] = analysis
     deps.analysis_context[analysis_sid]["stage1"] = analysis
     mapped_sections = extract_mapped_sections(analysis)
-    ctx["mapped_sections"] = mapped_sections
+    primary_sections = extract_primary_sections(analysis)
+    ctx["mapped_sections"] = primary_sections or mapped_sections
     fir_summary = fir_data.get("incident_description", "")[:600]
     ctx["fir_summary"] = fir_summary
 
@@ -258,7 +260,13 @@ async def handle_start_analysis(
     async def _thought2(t):
         await send({"type": "thought", "stage": 2, "message": t})
 
-    stage2_result = await _run_stage2(mapped_sections, fir_summary, deps, thought_callback=_thought2)
+    stage2_result = await _run_stage2(
+        primary_sections or mapped_sections,
+        fir_summary,
+        deps,
+        applicable_statutes=analysis.get("applicable_statutes", []),
+        thought_callback=_thought2,
+    )
     ctx["sim_result"] = stage2_result
     deps.analysis_context[analysis_sid]["stage2"] = stage2_result
     try:
@@ -341,7 +349,8 @@ async def handle_full_analysis(
     ctx["analysis"] = analysis
     deps.analysis_context[analysis_sid]["stage1"] = analysis
     mapped_sections = extract_mapped_sections(analysis)
-    ctx["mapped_sections"] = mapped_sections
+    primary_sections = extract_primary_sections(analysis)
+    ctx["mapped_sections"] = primary_sections or mapped_sections
     fir_summary = fir_data.get("incident_description", "")[:600]
     ctx["fir_summary"] = fir_summary
 
@@ -365,7 +374,13 @@ async def handle_full_analysis(
     async def _thought2(t):
         await send({"type": "thought", "stage": 2, "message": t})
 
-    stage2_result = await _run_stage2(mapped_sections, fir_summary, deps, thought_callback=_thought2)
+    stage2_result = await _run_stage2(
+        primary_sections or mapped_sections,
+        fir_summary,
+        deps,
+        applicable_statutes=analysis.get("applicable_statutes", []),
+        thought_callback=_thought2,
+    )
     ctx["sim_result"] = stage2_result
     deps.analysis_context[analysis_sid]["stage2"] = stage2_result
     try:

@@ -163,17 +163,23 @@ http://localhost:3000
 
 ### Stage 1, FIR Analysis
 
-The backend receives FIR text through the WebSocket connection and runs the statute retrieval pipeline. It identifies criminal intent, retrieves relevant statute chunks, and maps them to IPC/BNS sections.
+The backend receives FIR text through the WebSocket connection and runs the statute retrieval pipeline. It identifies the primary legal nature of the matter, and then either maps the FIR to IPC/BNS sections or classifies it as a civil / consumer dispute when the facts show only a contract or quality disagreement without deception, force, or coercion.
 
 Relevant code paths:
 
 - `backend/api/rag_llm_chain_prompting.py`
 - `backend/api/intent_queries.py`
-- `backend/api/rag_llm_chain_prompting.py` also contains the statute filtering and section-ranking logic
+- `backend/api/formatters.py`
+
+### Stage 1 Output Notes
+
+- Criminal matters show clean IPC/BNS section labels in the UI
+- Civil / contract disputes return `Applicable Sections (0)` and a civil/consumer legal basis instead of cheating/fraud sections
+- The stage 1 card displays the statute numbers and any corresponding BNS sections, not the offense title text
 
 ### Stage 2, Indian Kanoon Precedents
 
-The stage 2 flow does the following:
+Stage 2 runs only when the matter is treated as criminal. It does the following:
 
 1. Builds a Kanoon search query from the FIR facts and mapped sections
 2. Searches Indian Kanoon for real precedent cases
@@ -282,6 +288,8 @@ This usually means one of the following:
 - Indian Kanoon returned no results for the current query terms
 - The API key is missing or invalid
 
+If the input is a civil / contract dispute, stage 2 is intentionally skipped and stage 1 will return zero criminal sections.
+
 ## Development Notes
 
 - Keep backend changes focused; the project is already split by stage and feature
@@ -306,6 +314,7 @@ The project currently supports:
 
 - FIR analysis from text and OCR
 - Statute mapping and stage-based reasoning
+- Civil / contract dispute detection with zero criminal sections when appropriate
 - Indian Kanoon precedent retrieval
 - Case summaries and verdict prediction
 - Chat history and session persistence
@@ -315,4 +324,5 @@ The project currently supports:
 
 - Improve precedent retrieval quality for more specific FIR fact patterns
 - Continue tuning stage 2 ranking and summarization
+- Expand civil-vs-criminal detection coverage for more non-criminal complaint patterns
 - Extend the frontend history and session management UX if needed

@@ -69,3 +69,16 @@ def extract_mapped_sections(analysis: dict) -> list[str]:
                 seen.add(ckey)
                 sections.append(ckey)
     return sections
+
+
+def extract_primary_sections(analysis: dict) -> list[str]:
+    """Pull only the primary statute sections from a RAG analysis result (deduplicated)."""
+    seen = set()
+    sections = []
+    for s in analysis.get("applicable_statutes", []):
+        p = s.get("primary", {})
+        key = f"{p.get('law', '')} {p.get('section', '')}"
+        if key not in seen:
+            seen.add(key)
+            sections.append(key)
+    return sections

@@ -180,7 +180,7 @@ def timed_stage1(rag: StatuteRAGChainSystem, fir_data: dict) -> dict:
 def timed_stage2(mapped_sections: list[str], fir_summary: str) -> dict:
     """Run Stage 2 with per-sub-step timing."""
     import indian_kanoon as ik
-    from groq_prompts import build_fact_query, summarize_case, predict_verdict, rank_section_influence
+    from groq_prompts import build_fact_query, summarize_case_with_llm, predict_verdict, rank_section_influence
 
     times = {}
     ipc_sections = ik._extract_ipc_sections(mapped_sections)
@@ -254,21 +254,31 @@ def timed_stage2(mapped_sections: list[str], fir_summary: str) -> dict:
             doc_texts[tid] = ik._clean_html(doc_data.get("doc", "")) or case["snippet"]
     times["2c_fetch_judgments"] = time.perf_counter() - t0
 
-    # 2d — Summarize each case (LLM)
+    # 2d — Summarize each case and keep only relevant matches (LLM)
     t0 = time.perf_counter()
+    relevant_cases = []
     for case in all_cases:
         tid = case["tid"]
         if tid and tid in doc_texts:
-            case["summary"] = summarize_case(case["title"], doc_texts[tid], case["section"])
+            summary_result = summarize_case_with_llm(
+                doc_texts[tid],
+                case_title=case["title"],
+                fir_summary=fir_summary,
+                ipc_sections=[f"IPC {s}" for s in ipc_sections],
+                return_metadata=True,
+            )
+            if summary_result.get("relevant") and summary_result.get("summary"):
+                case["summary"] = summary_result["summary"]
+                relevant_cases.append(case)
     times["2d_summarize_cases_llm"] = time.perf_counter() - t0
 
     # 2e — Predict verdict (LLM)
-    cases_with_summaries = [c for c in all_cases if c.get("summary")]
+    cases_with_summaries = [c for c in relevant_cases if c.get("summary")]
     t0 = time.perf_counter()
     verdict = predict_verdict(
         fir_summary=fir_summary,
         ipc_sections=[f"IPC {s}" for s in ipc_sections],
-        case_summaries=cases_with_summaries or all_cases,
+        case_summaries=cases_with_summaries or relevant_cases,
     )
     times["2e_predict_verdict_llm"] = time.perf_counter() - t0
 
@@ -278,7 +288,7 @@ def timed_stage2(mapped_sections: list[str], fir_summary: str) -> dict:
         mapped_sections=mapped_sections,
         fir_summary=fir_summary,
         verdict=verdict,
-        case_summaries=cases_with_summaries or all_cases,
+        case_summaries=cases_with_summaries or relevant_cases,
     )
     times["2f_rank_influence_llm"] = time.perf_counter() - t0
 
@@ -286,7 +296,7 @@ def timed_stage2(mapped_sections: list[str], fir_summary: str) -> dict:
 
     stage2_result = {
         "status": "success" if cases_with_summaries else "partial",
-        "cases": all_cases,
+        "cases": relevant_cases,
         "verdict_prediction": verdict,
         "section_influence": section_influence,
         "api_calls_used": api_calls,
