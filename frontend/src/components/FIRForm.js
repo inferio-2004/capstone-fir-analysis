@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { Send, ChevronDown, ChevronUp } from 'lucide-react';
+import React, { useState, useEffect, useRef } from 'react';
+import { Send, ChevronUp, Upload } from 'lucide-react';
 import './FIRForm.css';
 
 const EMPTY = {
@@ -63,6 +63,8 @@ export default function FIRForm({
   const [form, setForm] = useState(EMPTY);
   const [internalExpanded, setInternalExpanded] = useState(true);
   const [historyEditUnlocked, setHistoryEditUnlocked] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
+  const fileInputRef = useRef(null);
 
   const isHistory = viewMode === 'history';
 
@@ -126,6 +128,36 @@ export default function FIRForm({
   const handleSampleFIR = () => {
     onSubmit(null);
     if (!isHistory) setExpanded(false);
+  };
+
+  const handleFileUpload = async (event) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    setIsUploading(true);
+    const formData = new FormData();
+    formData.append('file', file);
+
+    try {
+      // Assuming a valid backend token setup or handling CORS properly.
+      const res = await fetch('http://localhost:8000/api/fir/upload', {
+        method: 'POST',
+        body: formData,
+      });
+      if (!res.ok) throw new Error(`Failed to upload file. Server responded with ${res.status}`);
+      const data = await res.json();
+      if (data.status === 'ok' && data.fir) {
+        setForm(firToFormFields(data.fir));
+      } else {
+        alert('Could not parse FIR from file.');
+      }
+    } catch (err) {
+      console.error(err);
+      alert('Error uploading file. Please ensure the server is running and file is readable.');
+    } finally {
+      setIsUploading(false);
+      if (fileInputRef.current) fileInputRef.current.value = '';
+    }
   };
 
   if (!isExpanded && !isHistory) {
@@ -315,13 +347,24 @@ export default function FIRForm({
 
       {!isHistory && (
         <div className="fir-form-actions">
-          <button type="submit" className="btn btn-primary" disabled={disabled || !form.incident_description.trim()}>
+          <button type="submit" className="btn btn-primary" disabled={disabled || isUploading || !form.incident_description.trim()}>
             <Send size={16} />
             {hasAnalysis ? 'Re-analyze Case' : 'Analyze Case'}
           </button>
-          <button type="button" className="btn btn-secondary" onClick={handleSampleFIR} disabled={disabled}>
+          <button type="button" className="btn btn-secondary" onClick={handleSampleFIR} disabled={disabled || isUploading}>
             Use Sample FIR
           </button>
+          <button type="button" className="btn btn-secondary" onClick={() => {
+            if (fileInputRef && fileInputRef.current) {
+              fileInputRef.current.click();
+            } else {
+              document.getElementById('hidden-upload-input').click();
+            }
+          }} disabled={disabled || isUploading}>
+            <Upload size={14} style={{ marginRight: '6px' }}/>
+            {isUploading ? 'Uploading...' : 'Upload PDF / Image'}
+          </button>
+          <input id="hidden-upload-input" type="file" accept=".pdf,image/*" onChange={handleFileUpload} style={{ display: 'none' }} />
         </div>
       )}
 
